@@ -38,6 +38,13 @@ ln -s ~/.claude/skills/prompt-cookbook/git/pr-desc    .claude/skills/pr-desc
 | [commit-msg](git/commit-msg/SKILL.md) | `/commit-msg <mode> [context]` | 規約に沿った日本語コミットメッセージを生成 |
 | [pr-desc](git/pr-desc/SKILL.md) | `/pr-desc <mode> [context]` | レビュアー向けの日本語 PR 説明文を生成 |
 
+### tools
+
+| スキル | コマンド | 概要 |
+|--------|----------|------|
+| [snap](tools/snap/SKILL.md) | `/snap [prompt]` | クリップボードの画像を Claude CLI から直接分析 |
+| [snappath](tools/snappath/SKILL.md) | `/snappath` | クリップボードの画像を一時ファイルに保存しパスを返す |
+
 ## 使い方
 
 各スキルは `<mode>` と任意の `[context]` を引数に取ります。
@@ -66,11 +73,17 @@ ln -s ~/.claude/skills/prompt-cookbook/git/pr-desc    .claude/skills/pr-desc
 
 ```
 prompt-cookbook/
-└── git/
-    ├── commit-msg/
+├── git/
+│   ├── commit-msg/
+│   │   ├── SKILL.md
+│   │   └── examples.md
+│   └── pr-desc/
+│       ├── SKILL.md
+│       └── examples.md
+└── tools/
+    ├── snap/
     │   ├── SKILL.md
-    │   └── examples.md
-    └── pr-desc/
-        ├── SKILL.md
-        └── examples.md
+    │   └── snap.ps1       # スタンドアロン利用時の PowerShell スクリプト
+    └── snappath/
+        └── SKILL.md
 ```
