@@ -11,13 +11,32 @@ from pathlib import Path
 
 try:
     import openpyxl
-    from openpyxl.styles import Alignment
+    from openpyxl.styles import Alignment, PatternFill
 except ImportError:
     print("[ERROR] openpyxl が必要です。pip install openpyxl でインストールしてください。")
     sys.exit(1)
 
 SKILL_ROOT = Path(__file__).parent.parent
 TEMPLATE_PATH = SKILL_ROOT / "templates" / "test_spec_template.xlsx"
+
+# テスト観点シート 列位置
+VP_DATA_START = 6
+VP_COL_NO = 2       # B: No.
+VP_COL_GROUP = 3    # C: テスト観点（グループ名）
+VP_COL_ITEMS = 4    # D: 確認項目（箇条書き）
+
+# テストケースシート 列位置
+TC_DATA_START = 9
+TC_COL_NO = 1       # A: 項番
+TC_COL_NAME = 2     # B: テスト観点（グループ行=グループ名、詳細行=テスト名）
+TC_COL_PRECOND = 3  # C: 設定・前提条件
+TC_COL_STEPS = 4    # D: 入力値・操作手順
+TC_COL_EXPECTED = 5 # E: 期待値
+TC_COL_RESULT = 6   # F: 結果
+TC_COL_LAST = 8     # H: 実施日（グループ行の塗りつぶし終端）
+
+# グループ行の背景色（テスト進捗率セルと同色）
+GROUP_ROW_FILL = PatternFill(start_color="FFD9D9D9", end_color="FFD9D9D9", fill_type="solid")
 
 
 def load_json(input_path=None):
@@ -44,8 +63,11 @@ def load_workbook(output_path):
         return openpyxl.load_workbook(output_path)
     if TEMPLATE_PATH.exists():
         return openpyxl.load_workbook(TEMPLATE_PATH)
-    print(f"[ERROR] テンプレートが見つかりません: {TEMPLATE_PATH}")
-    sys.exit(1)
+    wb = openpyxl.Workbook()
+    wb.active.title = "テスト観点"
+    wb.create_sheet("テストケース")
+    wb.create_sheet("エビデンス")
+    return wb
 
 
 def find_sheet(wb, keywords):
@@ -55,14 +77,10 @@ def find_sheet(wb, keywords):
     return None
 
 
-def set_row_height(ws, row, columns):
-    """改行数に基づいて行の高さを設定する。"""
-    max_lines = 1
-    for col in columns:
-        value = ws.cell(row=row, column=col).value
-        if value:
-            max_lines = max(max_lines, str(value).count("\n") + 1)
-    ws.row_dimensions[row].height = max_lines * LINE_HEIGHT
+def ensure_evidence_sheet(wb):
+    """エビデンスシートがなければ追加する。"""
+    if not any("エビデンス" in name for name in wb.sheetnames):
+        wb.create_sheet("エビデンス")
 
 
 def set_text_cell(ws, row, col, value):
@@ -73,22 +91,55 @@ def set_text_cell(ws, row, col, value):
 
 
 def write_test_viewpoints(ws, viewpoints):
-    start_row = 6  # row 5 = header, row 6 = data start
+    """テスト観点シートにグループ単位でデータを書き込む。"""
     for i, vp in enumerate(viewpoints):
-        row = start_row + i
-        set_text_cell(ws, row, 3, vp["category"])
-        set_text_cell(ws, row, 4, vp["item"])
+        row = VP_DATA_START + i
+        set_text_cell(ws, row, VP_COL_NO, i + 1)
+        set_text_cell(ws, row, VP_COL_GROUP, vp["group"])
+        items_text = "\n".join(f"・{item}" for item in vp["items"])
+        set_text_cell(ws, row, VP_COL_ITEMS, items_text)
 
 
-def write_test_cases(ws, test_cases):
-    start_row = 9
-    for i, tc in enumerate(test_cases):
-        row = start_row + i
-        steps_text = "\n".join(f"{j + 1}. {step}" for j, step in enumerate(tc["steps"]))
-        set_text_cell(ws, row, 2, tc["viewpoint"])
-        set_text_cell(ws, row, 3, tc["precondition"])
-        set_text_cell(ws, row, 4, steps_text)
-        set_text_cell(ws, row, 5, tc["expected"])
+def write_test_cases(ws, test_viewpoints, test_cases):
+    """テストケースシートにグループ行・詳細テストケース行を書き込む。
+
+    テスト観点シートのグループ順に合わせてグループ行を挿入し、
+    その配下に詳細テストケースを並べる。
+    """
+    groups_order = [vp["group"] for vp in test_viewpoints]
+    cases_by_group: dict[str, list] = {}
+    for tc in test_cases:
+        g = tc.get("group", "")
+        if g not in cases_by_group:
+            cases_by_group[g] = []
+        cases_by_group[g].append(tc)
+
+    current_row = TC_DATA_START
+    item_no = 1
+
+    for group in groups_order:
+        cases = cases_by_group.get(group, [])
+        if not cases:
+            continue
+
+        # グループ行（結果=対象外、項番なし、背景色あり）
+        ws.cell(row=current_row, column=TC_COL_NO).value = None  # テンプレート数式を上書きしてクリア
+        set_text_cell(ws, current_row, TC_COL_NAME, group)
+        set_text_cell(ws, current_row, TC_COL_RESULT, "対象外")
+        for col in range(TC_COL_NO, TC_COL_LAST + 1):
+            ws.cell(row=current_row, column=col).fill = GROUP_ROW_FILL
+        current_row += 1
+
+        # 詳細テストケース行
+        for tc in cases:
+            steps_text = "\n".join(f"{j + 1}. {step}" for j, step in enumerate(tc["steps"]))
+            set_text_cell(ws, current_row, TC_COL_NO, item_no)
+            set_text_cell(ws, current_row, TC_COL_NAME, tc["name"])
+            set_text_cell(ws, current_row, TC_COL_PRECOND, tc["precondition"])
+            set_text_cell(ws, current_row, TC_COL_STEPS, steps_text)
+            set_text_cell(ws, current_row, TC_COL_EXPECTED, tc["expected"])
+            current_row += 1
+            item_no += 1
 
 
 def fix_inline_strings(xlsx_path):
@@ -222,16 +273,18 @@ def main():
         print(f"  シート一覧: {wb.sheetnames}")
         sys.exit(1)
 
+    ensure_evidence_sheet(wb)
     write_test_viewpoints(sheet_viewpoints, data["test_viewpoints"])
-    write_test_cases(sheet_cases, data["test_cases"])
+    write_test_cases(sheet_cases, data["test_viewpoints"], data["test_cases"])
 
     wb.save(output_path)
     fix_inline_strings(output_path)
 
+    total_cases = len(data["test_cases"])
     print(f"[完了] テスト仕様書を出力しました。")
     print(f"  ファイル: {output_path}")
-    print(f"  テスト観点: {len(data['test_viewpoints'])} 件")
-    print(f"  テストケース: {len(data['test_cases'])} 件")
+    print(f"  テスト観点グループ: {len(data['test_viewpoints'])} グループ")
+    print(f"  テストケース: {total_cases} 件")
 
 
 if __name__ == "__main__":
