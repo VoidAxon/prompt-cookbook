@@ -44,7 +44,7 @@ ln -s ~/.claude/skills/prompt-cookbook/git/pr-desc    .claude/skills/pr-desc
 |--------|----------|------|
 | [snap](tools/snap/SKILL.md) | `/snap [prompt]` | クリップボードの画像を Claude CLI から直接分析 |
 | [snappath](tools/snappath/SKILL.md) | `/snappath` | クリップボードの画像を一時ファイルに保存しパスを返す |
-| [generate-testdoc](tools/generate-testdoc/SKILL.md) | `/generate-testdoc <KintoneID> <Title> [--pr <no>] [--commit <sha>]` | PRまたはコミットの差分からテスト仕様書（Excel）を生成 |
+| [generate-testdoc](tools/generate-testdoc/SKILL.md) | `/generate-testdoc pr <no>` | PRまたはコミットの差分からテスト仕様書（Excel）を生成 |
 
 ## 使い方
 
@@ -106,16 +106,16 @@ cp -r tools/generate-testdoc ~/.claude/skills/generate-testdoc
 PR タイトルが `1234 患者一覧の検索条件修正` のように `KintoneID タイトル` の形式であれば、PR 番号だけで実行できます。KintoneID とタイトルは PR タイトルから自動的に抽出されます。
 
 ```
-/generate-testdoc --pr 456
-/generate-testdoc --pr 456 --repo medley-inc/mall3   # 別リポジトリ
+/generate-testdoc pr 456
+/generate-testdoc pr 456 repo medley-inc/mall3   # 別リポジトリ
 ```
 
 **KintoneID・タイトルを手動指定する場合**
 
-`--commit` やステージング差分を使う場合は明示的に指定します。
+`commit` やステージング差分を使う場合は明示的に指定します。
 
 ```
-/generate-testdoc 1234 患者一覧の検索条件修正 --commit abc1234
+/generate-testdoc 1234 患者一覧の検索条件修正 commit abc1234
 /generate-testdoc 1234 患者一覧の検索条件修正
 ```
 
