@@ -525,10 +525,19 @@ JSONを一時ファイルに保存してスクリプトを呼び出す。
 
 **注意：** Windows 環境では `/tmp/` が Python の `tempfile.gettempdir()` と異なる場合がある。Bash の `/tmp/` に書き込んだファイルは Python から参照できないため、Python の一時ディレクトリ（例: `C:/Users/<user>/AppData/Local/Temp/`）に直接保存して渡すこと。
 
+**スキルのパス解決：** Claude Code はスキルをプロジェクト優先で探す（`.claude/skills/` → `~/.claude/skills/`）。スクリプト実行前に以下で実際のパスを確認すること：
+
+```bash
+# プロジェクト優先でスキルディレクトリを特定
+SKILL_DIR=".claude/skills/generate-testdoc"
+[ ! -d "$SKILL_DIR" ] && SKILL_DIR="$HOME/.claude/skills/generate-testdoc"
+echo "$SKILL_DIR"
+```
+
 #### パターン A: 単一ファイル（通常ケース）
 
 ```bash
-python ~/.claude/skills/generate-testdoc/scripts/generate_testdoc.py \
+python "$SKILL_DIR/scripts/generate_testdoc.py" \
   --kintone-id "<KintoneID>" \
   --title "<Title>" \
   --input "<TempDir>/testdoc_<KintoneID>.json"
@@ -550,13 +559,13 @@ python ~/.claude/skills/generate-testdoc/scripts/generate_testdoc.py \
 
 ```bash
 # 分割ファイル 1
-python ~/.claude/skills/generate-testdoc/scripts/generate_testdoc.py \
+python "$SKILL_DIR/scripts/generate_testdoc.py" \
   --kintone-id "<KintoneID>" \
   --title "<Title>（新機能）" \
   --input "<TempDir>/testdoc_<KintoneID>_1.json"
 
 # 分割ファイル 2
-python ~/.claude/skills/generate-testdoc/scripts/generate_testdoc.py \
+python "$SKILL_DIR/scripts/generate_testdoc.py" \
   --kintone-id "<KintoneID>" \
   --title "<Title>（既存改修）" \
   --input "<TempDir>/testdoc_<KintoneID>_2.json"
