@@ -101,29 +101,21 @@ cp -r tools/generate-testdoc ~/.claude/skills/generate-testdoc
 
 ### 使い方
 
+**`--pr` を使う場合（最も一般的）**
+
+PR タイトルが `1234 患者一覧の検索条件修正` のように `KintoneID タイトル` の形式であれば、PR 番号だけで実行できます。KintoneID とタイトルは PR タイトルから自動的に抽出されます。
+
 ```
-/generate-testdoc <KintoneID> <Title> [--pr <no>] [--commit <sha>] [--repo <owner/repo>]
+/generate-testdoc --pr 456
+/generate-testdoc --pr 456 --repo medley-inc/mall3   # 別リポジトリ
 ```
 
-| 引数 | 必須 | 説明 |
-|------|------|------|
-| `KintoneID` | ✓ | Kintone チケット ID |
-| `Title` | ✓ | 変更タイトル（スペース含む場合はクォート） |
-| `--pr <number>` | | PR 番号（`gh` CLI で差分と説明文を取得） |
-| `--commit <sha>` | | 特定コミットのハッシュ |
-| `--repo <owner/repo>` | | 対象リポジトリ（デフォルト: `medley-inc/mall4`） |
+**KintoneID・タイトルを手動指定する場合**
 
-```bash
-# PR 番号を指定（最も一般的な使い方）
-/generate-testdoc 1234 患者一覧の検索条件修正 --pr 567
+`--commit` やステージング差分を使う場合は明示的に指定します。
 
-# 別リポジトリの PR を指定
-/generate-testdoc 1234 患者一覧の検索条件修正 --pr 567 --repo medley-inc/mall3
-
-# 特定コミットを指定
+```
 /generate-testdoc 1234 患者一覧の検索条件修正 --commit abc1234
-
-# ステージングされた差分から生成
 /generate-testdoc 1234 患者一覧の検索条件修正
 ```
 
@@ -149,8 +141,6 @@ Excel ファイルが `~/Documents/docs/testcase/【{KintoneID}】 {Title}.xlsx`
 | ⑤ | 操作性・UX | リアルタイムフィードバック・即時反映 |
 | ⑥ | 連携・複合条件 | 他機能との組み合わせ・相互影響 |
 | ⑦ | 回帰確認 | 既存機能への変更影響なし（常に追加） |
-
-薬剤・処方・算定が関係する変更には、用量境界・中止系・算定期間・外部連携・数値精度の医療固有観点も追加されます。
 
 ---
 
