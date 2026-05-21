@@ -45,6 +45,7 @@ ln -s ~/.claude/skills/prompt-cookbook/git/pr-desc    .claude/skills/pr-desc
 | [snap](tools/snap/SKILL.md) | `/snap [prompt]` | クリップボードの画像を Claude CLI から直接分析 |
 | [snappath](tools/snappath/SKILL.md) | `/snappath` | クリップボードの画像を一時ファイルに保存しパスを返す |
 | [generate-testdoc](tools/generate-testdoc/SKILL.md) | `/generate-testdoc pr <no>` | PRまたはコミットの差分からテスト仕様書（Excel）を生成 |
+| [find-prs](tools/find-prs/SKILL.md) | `/find-prs <keyword> [opts]` | 組織横断で PR タイトル検索し、oneline/tree/table で出力 |
 
 ## 使い方
 
@@ -161,6 +162,9 @@ prompt-cookbook/
     │   └── snap.ps1              # スタンドアロン利用時の PowerShell スクリプト
     ├── snappath/
     │   └── SKILL.md
+    ├── find-prs/
+    │   ├── SKILL.md
+    │   └── examples.md
     └── generate-testdoc/
         ├── SKILL.md
         ├── scripts/
