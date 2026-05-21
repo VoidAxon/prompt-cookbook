@@ -9,11 +9,13 @@
 
 出力：
 ```
-mall4最新(#12), mall3最新(#34), release-2024(#11), release-2025(#13)
+mall4最新(#12), release-2025(#13), mall3最新(#34), release-m3-2025.08.31(#256)
 
 4 件ヒット
 oneline をクリップボードへコピーしました
 ```
+
+repo 優先順位（mall4 → mall3 → mall-jinei → その他）に沿って repo グループ単位で連続出力される。各 repo 内では develop が先、他分支は分支名辞書順。
 
 ## 例 2: tree + oneline 併用（merged のみ）
 
@@ -30,7 +32,7 @@ mall4
 mall3
   develop: https://github.com/medley-inc/mall3/pull/34
 
-mall4最新(#12), mall3最新(#34), release-2025(#13)
+mall4最新(#12), release-2025(#13), mall3最新(#34)
 
 3 件ヒット
 oneline をクリップボードへコピーしました
@@ -45,14 +47,18 @@ oneline をクリップボードへコピーしました
 
 出力：
 ```
-| 仓储:分支 | PR# | State | Title | URL |
-|----------|-----|-------|-------|-----|
-| mall4:develop | #12 | merged | 1234 患者一覧の検索条件修正 | https://github.com/medley-inc/mall4/pull/12 |
-| mall4:release-2025 | #13 | merged | 1234 患者一覧の検索条件修正 | https://github.com/medley-inc/mall4/pull/13 |
+**Title:** 1234 患者一覧の検索条件修正
+
+| ブランチ | PR# | State | URL |
+|---------|-----|-------|-----|
+| mall4:develop | #12 | merged | https://github.com/medley-inc/mall4/pull/12 |
+| mall4:release-2025 | #13 | merged | https://github.com/medley-inc/mall4/pull/13 |
 
 2 件ヒット
 コピー対象（oneline）が出力に含まれないためスキップしました
 ```
+
+複数のタイトルがある場合は `**Titles:**` 見出しに切り替わり、共通プレフィックスを持つタイトル群は最短のもの 1 つに集約される。
 
 ## 例 4: 0 件ヒット
 

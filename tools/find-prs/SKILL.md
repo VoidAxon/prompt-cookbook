@@ -100,18 +100,21 @@ gh pr view <number> --repo <owner/repo> --json baseRefName
 
 ## Step 5: 集計・並び替え
 
-検索結果を `repository.nameWithOwner` で groupBy する。
+検索結果を `repository.nameWithOwner` で groupBy する。**oneline・tree・table すべて同じ repo グループ順序**で出力する。
 
-**oneline 用の並び順：**
+**repo グループの並び順（medley-inc 既定の優先順位）：**
 
-1. `baseRefName == "develop"` の条目を先頭にまとめる
-2. 1 のグループ内では repo 名（`nameWithOwner` ではなく `name` 部分）の辞書順
-3. その後に他の分支条目を分支名の辞書順で並べる
+1. `mall4`
+2. `mall3`
+3. `mall-jinei`
+4. その他の repo（辞書順）
 
-**tree / table 用の並び順：**
+`--org` が `medley-inc` 以外の場合は上記優先リストを無視し、全 repo を辞書順とする。
 
-1. repo 名の辞書順
-2. 各 repo 内では分支名の辞書順
+**各 repo グループ内の並び順（全形式共通）：**
+
+1. `baseRefName == "develop"` の条目を先頭
+2. その後、他の分支条目を分支名の辞書順
 
 **同一 repo・同一 base 分支に複数 PR が存在する場合：**
 
@@ -129,11 +132,12 @@ gh pr view <number> --repo <owner/repo> --json baseRefName
 - `baseRefName == "develop"` → `<repo>最新(#PR番号)`
 - それ以外 → `<分支名>(#PR番号)`
 - 区切り: `, `（半角カンマ + 半角スペース）
+- repo グループ単位で連続させる（Step 5 の並び順）。mall4 のすべての条目を出し切ってから mall3 に移る、というように **repo を跨いで develop だけまとめて先頭に出すことはしない**
 
-例：
+例（mall4 に develop + 1 release、mall3 に develop の場合）：
 
 ```
-mall4最新(#12), mall3最新(#34), release-2024(#11), release-2025(#13)
+mall4最新(#12), release-2025(#13), mall3最新(#34)
 ```
 
 ### 6.2 tree 形式
@@ -156,18 +160,28 @@ mall3
 
 ### 6.3 table 形式
 
-Markdown 表形式：
+Markdown 表形式。**Title 列は持たず**、検索結果に現れたユニークタイトルをテーブルの直前に箇条書きで列挙する。
 
-| 仓储:分支 | PR# | State | Title | URL |
-|----------|-----|-------|-------|-----|
-| `<repo>:<分支名>`（develop の簡略化なし） | `#<番号>` | `open` / `closed` / `merged` | PR タイトル原文 | PR の HTML URL |
+**タイトル列挙ルール：**
+
+- テーブルの直前に `**Title:**`（1 件）または `**Titles:**`（複数件）見出しを置き、その下に箇条書きで列挙
+- 共通プレフィックス集約：タイトル A が別タイトル B の **完全な前方一致プレフィックス**である場合、より長い B は非表示にし、最短の A だけ残す。差分が末尾サフィックス（ブランチ識別子等）のみのケースを想定。中間一致・部分一致では集約しない
+- 集約後の残り件数で見出しを切り替える（1 件 → `Title:`、複数 → `Titles:`）
+
+**テーブル仕様：**
+
+| ブランチ | PR# | State | URL |
+|---------|-----|-------|-----|
+| `<repo>:<分支名>`（develop の簡略化なし） | `#<番号>` | `open` / `closed` / `merged` | PR の HTML URL |
 
 例：
 
-| 仓储:分支 | PR# | State | Title | URL |
-|----------|-----|-------|-------|-----|
-| mall4:develop | #12 | merged | 1234 患者一覧の検索条件修正 | https://github.com/medley-inc/mall4/pull/12 |
-| mall4:release-2025 | #13 | merged | 1234 患者一覧の検索条件修正 | https://github.com/medley-inc/mall4/pull/13 |
+**Title:** 1234 患者一覧の検索条件修正
+
+| ブランチ | PR# | State | URL |
+|---------|-----|-------|-----|
+| mall4:develop | #12 | merged | https://github.com/medley-inc/mall4/pull/12 |
+| mall4:release-2025 | #13 | merged | https://github.com/medley-inc/mall4/pull/13 |
 
 ---
 
