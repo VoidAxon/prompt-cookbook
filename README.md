@@ -185,7 +185,7 @@ gh auth login
 | 形式 | 用途 |
 |------|------|
 | `oneline` | Excel / Kintone 等に貼り付ける 1 行サマリ（例: `mall4最新(#12), release-2025(#13), mall3最新(#34)`） |
-| `tree` | repo / 分支 / URL の階層表示 |
+| `tree` | repo / 分支 / URL をプレフィックス・インデント無しのフラット行リストで表示（repo 名は単独行、分支行は `分支名: URL` で識別） |
 | `table` | ブランチ・PR#・State・URL の表形式。タイトルが共通プレフィックスで 1 つに集約できる場合は Title 列を除いて表上に 1 行表示、複数の異なるタイトルが残る場合は Title 列に表示 |
 
 いずれの形式でも repo グループ単位で連続出力されます。**medley-inc 既定の repo 優先順位は `mall4` → `mall3` → `mall-jinei` → その他（辞書順）**。各 repo 内では `develop` を先頭にし、他分支は分支名の辞書順で並びます。

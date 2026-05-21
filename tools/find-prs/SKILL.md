@@ -142,20 +142,22 @@ mall4最新(#12), release-2025(#13), mall3最新(#34)
 
 ### 6.2 tree 形式
 
+プレフィックス・インデント無しのフラットな行リスト。Slack 等にそのまま貼り付けても余計な装飾文字が出ない形。
+
 ルール：
-- 行頭に repo 名のみ（組織名なし）
-- 次行から半角スペース 2 個でインデント、ツリー記号なし
-- 各エントリは `<分支名>: <URL>`
+- repo 行は `<repo名>` 単独（組織名なし、行頭からそのまま、装飾なし）
+- 各分支行は `<分支名>: <URL>`（インデント無し、行頭から）
 - 複数 repo 間に空行を入れない（密に詰める）
+- repo 名は単独行（URL なし）で出るため、`分支名: URL` 形式の分支行と視覚的に区別される
 
 例：
 
 ```
 mall4
-  develop: https://github.com/medley-inc/mall4/pull/12
-  release-2025: https://github.com/medley-inc/mall4/pull/13
+develop: https://github.com/medley-inc/mall4/pull/12
+release-2025: https://github.com/medley-inc/mall4/pull/13
 mall3
-  develop: https://github.com/medley-inc/mall3/pull/34
+develop: https://github.com/medley-inc/mall3/pull/34
 ```
 
 ### 6.3 table 形式

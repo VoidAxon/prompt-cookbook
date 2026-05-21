@@ -33,10 +33,10 @@
 出力：
 ```
 mall4
-  develop: https://github.com/medley-inc/mall4/pull/12
-  release-2025: https://github.com/medley-inc/mall4/pull/13
+develop: https://github.com/medley-inc/mall4/pull/12
+release-2025: https://github.com/medley-inc/mall4/pull/13
 mall3
-  develop: https://github.com/medley-inc/mall3/pull/34
+develop: https://github.com/medley-inc/mall3/pull/34
 
 mall4最新(#12), release-2025(#13), mall3最新(#34)
 
@@ -44,7 +44,7 @@ mall4最新(#12), release-2025(#13), mall3最新(#34)
 oneline をクリップボードへコピーしました
 ```
 
-`--copy` を明示した時のみクリップボードコピーが行われ、完了報告にその結果が出力される。
+`--copy` を明示した時のみクリップボードコピーが行われ、完了報告にその結果が出力される。tree 部分はプレフィックス・インデント無しのフラット行リスト。
 
 ## 例 3: table 単独（集約後 1 件 — 共通プレフィックスのケース）
 
