@@ -154,7 +154,7 @@ GitHub 組織配下の全リポジトリから PR タイトルを検索し、結
 | 依存 | 用途 |
 |------|------|
 | **gh CLI** | PR 検索と base 分支取得 |
-| **PowerShell**（Windows のみ） | oneline 結果のクリップボード自動コピー |
+| **PowerShell**（Windows のみ） | `--copy` 明示時に oneline 結果をクリップボードへコピー |
 
 ```bash
 gh auth login
@@ -171,13 +171,13 @@ gh auth login
 | `<keyword>` | — | 任意文字列 | PR タイトル検索キーワード（例: `1234`、`患者一覧`） |
 | `--org` | `medley-inc` | 任意組織名 | GitHub 組織名 |
 | `--state` | `all` | `open` / `closed` / `merged` / `all` | PR 状態フィルタ |
-| `--format` | `oneline` | `oneline` / `tree` / `table`（カンマ区切り併用可） | 出力形式 |
-| `--copy` / `--no-copy` | `--copy` | フラグ | Windows 限定で oneline をクリップボードへコピー |
+| `--format` | `table` | `oneline` / `tree` / `table`（カンマ区切り併用可） | 出力形式 |
+| `--copy` / `--no-copy` | `--no-copy` | フラグ | `--copy` 明示指定時のみ Windows でクリップボードへコピー（既定はコピーしない） |
 
 ```
-/find-prs 1234
-/find-prs 1234 --state merged --format tree,oneline
-/find-prs 患者一覧 --format table
+/find-prs 1234                                          # 既定: table 形式、コピーなし
+/find-prs 1234 --state merged --format tree,oneline     # merged のみ・tree と oneline 併用
+/find-prs 1234 --format oneline --copy                  # oneline をクリップボードへコピー
 ```
 
 ### 出力形式
@@ -186,11 +186,13 @@ gh auth login
 |------|------|
 | `oneline` | Excel / Kintone 等に貼り付ける 1 行サマリ（例: `mall4最新(#12), release-2025(#13), mall3最新(#34)`） |
 | `tree` | repo / 分支 / URL の階層表示 |
-| `table` | ブランチ・PR#・State・URL の表形式（Title はテーブル直前に集約表示） |
+| `table` | ブランチ・PR#・State・URL の表形式。タイトルが共通プレフィックスで 1 つに集約できる場合は Title 列を除いて表上に 1 行表示、複数の異なるタイトルが残る場合は Title 列に表示 |
 
 いずれの形式でも repo グループ単位で連続出力されます。**medley-inc 既定の repo 優先順位は `mall4` → `mall3` → `mall-jinei` → その他（辞書順）**。各 repo 内では `develop` を先頭にし、他分支は分支名の辞書順で並びます。
 
-table の Title 表示は、共通プレフィックスを持つタイトル群を最短形に集約します（例: `163092 ...` と `163092 ... m3-202508` が両方ある場合は前者だけを表示）。
+table の Title 扱いは、共通プレフィックス集約後の残り件数で切り替わります：
+- **1 件**（例: `163092 ...` と `163092 ... m3-202508` のように末尾だけ違う）→ Title 列を削除し、表上に `**Title:** ...` を 1 行表示
+- **2 件以上**（明らかに異なるタイトル群）→ Title 列を表内に保持
 
 詳細仕様は [tools/find-prs/SKILL.md](tools/find-prs/SKILL.md)、出力サンプルは [tools/find-prs/examples.md](tools/find-prs/examples.md) を参照してください。
 
