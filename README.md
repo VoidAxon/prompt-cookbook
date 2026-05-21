@@ -145,6 +145,57 @@ Excel ファイルが `~/Documents/docs/testcase/【{KintoneID}】 {Title}.xlsx`
 
 ---
 
+## find-prs
+
+GitHub 組織配下の全リポジトリから PR タイトルを検索し、結果を **oneline / tree / table** の 3 形式で整形出力するスキル。同じ要件の修正が複数の長期ブランチに分散している状況で、横断的に確認・コピペするのに使う。
+
+### 必要な環境
+
+| 依存 | 用途 |
+|------|------|
+| **gh CLI** | PR 検索と base 分支取得 |
+| **PowerShell**（Windows のみ） | oneline 結果のクリップボード自動コピー |
+
+```bash
+gh auth login
+```
+
+### 使い方
+
+```
+/find-prs <keyword> [--org <name>] [--state <s>] [--format <f>] [--copy|--no-copy]
+```
+
+| オプション | 既定 | 値域 | 説明 |
+|-----------|------|------|------|
+| `<keyword>` | — | 任意文字列 | PR タイトル検索キーワード（例: `1234`、`患者一覧`） |
+| `--org` | `medley-inc` | 任意組織名 | GitHub 組織名 |
+| `--state` | `all` | `open` / `closed` / `merged` / `all` | PR 状態フィルタ |
+| `--format` | `oneline` | `oneline` / `tree` / `table`（カンマ区切り併用可） | 出力形式 |
+| `--copy` / `--no-copy` | `--copy` | フラグ | Windows 限定で oneline をクリップボードへコピー |
+
+```
+/find-prs 1234
+/find-prs 1234 --state merged --format tree,oneline
+/find-prs 患者一覧 --format table
+```
+
+### 出力形式
+
+| 形式 | 用途 |
+|------|------|
+| `oneline` | Excel / Kintone 等に貼り付ける 1 行サマリ（例: `mall4最新(#12), release-2025(#13), mall3最新(#34)`） |
+| `tree` | repo / 分支 / URL の階層表示 |
+| `table` | ブランチ・PR#・State・URL の表形式（Title はテーブル直前に集約表示） |
+
+いずれの形式でも repo グループ単位で連続出力されます。**medley-inc 既定の repo 優先順位は `mall4` → `mall3` → `mall-jinei` → その他（辞書順）**。各 repo 内では `develop` を先頭にし、他分支は分支名の辞書順で並びます。
+
+table の Title 表示は、共通プレフィックスを持つタイトル群を最短形に集約します（例: `163092 ...` と `163092 ... m3-202508` が両方ある場合は前者だけを表示）。
+
+詳細仕様は [tools/find-prs/SKILL.md](tools/find-prs/SKILL.md)、出力サンプルは [tools/find-prs/examples.md](tools/find-prs/examples.md) を参照してください。
+
+---
+
 ## ディレクトリ構成
 
 ```
