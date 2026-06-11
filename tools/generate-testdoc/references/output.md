@@ -21,6 +21,26 @@ python "$SKILL_DIR/scripts/generate_testdoc.py" \
 
 → `【KintoneID】 <Title>.xlsx` で出力される。
 
+## PR 由来の場合のヘッダー書き込み（C3/C4）
+
+入力が `pr <number>` の場合、上記コマンドに以下を**必ず追加**する。テスト観点シートのヘッダーに PR 情報が書き込まれる：
+
+```bash
+  --pr-no "<PR番号>" \
+  --pr-url "https://github.com/<owner>/<repo>/pull/<PR番号>" \
+  --pr-title "<PRタイトル（KintoneID除去済み）>" \
+  --record-url "<PR本文から抽出したcybozuリンク>"   # 見つからなければ省略
+```
+
+| セル | 内容 |
+|------|------|
+| C3（kintoneレコード） | `--pr-title` の文字列。`--record-url` 指定時はそのリンク付き、なければ文字のみ |
+| C4（シェルブセット） | `#<PR番号>`（例: `#1234`）。`--pr-url` のリンク付き |
+
+- `--pr-title` は PR タイトルから先頭の KintoneID トークンを除去した残り（Step 1 で抽出した Title と同じ。ファイル分割時の識別情報サフィックスは付けない）
+- `--record-url` は PR 本文（body）中の URL のうち `cybozu` を含む最初のもの。なければ省略する（C3 は文字のみになる）
+- commit / staged 由来の場合はこれらの引数を付けない（C3/C4 は書き込まれない）
+
 ## ファイル分割（変更量が多いケース）
 
 以下に該当する場合、JSON とタイトルを分けて複数ファイル出力：

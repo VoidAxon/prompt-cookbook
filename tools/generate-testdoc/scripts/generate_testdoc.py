@@ -11,13 +11,20 @@ from pathlib import Path
 
 try:
     import openpyxl
-    from openpyxl.styles import Alignment, PatternFill
+    from openpyxl.styles import Alignment, Font, PatternFill
 except ImportError:
     print("[ERROR] openpyxl が必要です。pip install openpyxl でインストールしてください。")
     sys.exit(1)
 
 SKILL_ROOT = Path(__file__).parent.parent
 TEMPLATE_PATH = SKILL_ROOT / "templates" / "test_spec_template.xlsx"
+
+# テスト観点シート ヘッダー位置（PR 由来の場合のみ書き込む）
+VP_HEADER_RECORD = (3, 3)   # C3: kintoneレコード（PR タイトル、cybozu リンク付き）
+VP_HEADER_PR = (4, 3)       # C4: #<PR番号>（PR リンク付き）
+
+# ハイパーリンクの見た目（青字・下線）
+HYPERLINK_FONT = Font(color="FF0563C1", underline="single")
 
 # テスト観点シート 列位置
 VP_DATA_START = 6
@@ -88,6 +95,28 @@ def set_text_cell(ws, row, col, value):
     cell = ws.cell(row=row, column=col, value=value)
     cell.number_format = "@"
     cell.alignment = Alignment(wrap_text=True, vertical="top")
+
+
+def write_pr_header(ws, pr_title, record_url, pr_no, pr_url):
+    """PR 由来の場合、テスト観点シートのヘッダーに PR 情報を書き込む。
+
+    C3: PR タイトル（KintoneID 除去済み）。record_url（cybozu リンク）があればリンク化。
+    C4: #<PR番号>。pr_url があればリンク化。
+    """
+    if pr_title:
+        row, col = VP_HEADER_RECORD
+        cell = ws.cell(row=row, column=col, value=pr_title)
+        cell.number_format = "@"
+        if record_url:
+            cell.hyperlink = record_url
+            cell.font = HYPERLINK_FONT
+    if pr_no:
+        row, col = VP_HEADER_PR
+        cell = ws.cell(row=row, column=col, value=f"#{pr_no}")
+        cell.number_format = "@"
+        if pr_url:
+            cell.hyperlink = pr_url
+            cell.font = HYPERLINK_FONT
 
 
 def write_test_viewpoints(ws, viewpoints):
@@ -254,6 +283,10 @@ def main():
     parser.add_argument("--title", required=True, help="変更タイトル")
     parser.add_argument("--input", help="JSONファイルパス（省略時はstdin）")
     parser.add_argument("--output", default="~/Documents/docs/testcase/", help="出力ディレクトリ")
+    parser.add_argument("--pr-no", help="PR番号。指定時にテスト観点シートのC3/C4へPR情報を書き込む")
+    parser.add_argument("--pr-url", help="PRのURL（C4のリンク先）")
+    parser.add_argument("--pr-title", help="C3に書くPRタイトル（KintoneID除去済み。省略時は--title）")
+    parser.add_argument("--record-url", help="PR本文から抽出したcybozuリンク（C3のリンク先、省略可）")
     args = parser.parse_args()
 
     try:
@@ -274,6 +307,14 @@ def main():
         sys.exit(1)
 
     ensure_evidence_sheet(wb)
+    if args.pr_no:
+        write_pr_header(
+            sheet_viewpoints,
+            args.pr_title or args.title,
+            args.record_url,
+            args.pr_no,
+            args.pr_url,
+        )
     write_test_viewpoints(sheet_viewpoints, data["test_viewpoints"])
     write_test_cases(sheet_cases, data["test_viewpoints"], data["test_cases"])
 
