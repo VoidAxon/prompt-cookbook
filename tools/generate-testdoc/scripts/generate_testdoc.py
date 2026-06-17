@@ -2,7 +2,6 @@
 """Generate test specification Excel document from JSON input."""
 
 import argparse
-import glob
 import json
 import re
 import sys
@@ -57,17 +56,24 @@ def resolve_output_path(output_dir, kintone_id, title):
     output_dir = Path(output_dir).expanduser()
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    existing = glob.glob(str(output_dir / f"【{kintone_id}】*.xlsx"))
-    if len(existing) > 1:
-        print(f"[WARNING] 同一KintoneIDのファイルが複数存在します。最初のファイルを更新します: {existing[0]}")
-    if existing:
-        return Path(existing[0])
-    return output_dir / f"【{kintone_id}】 {title}.xlsx"
+    # 同名ファイルは上書きせず、バージョン番号を付けて新規作成する。
+    # 例: 「【ID】 タイトル.xlsx」が既存なら「【ID】 タイトル_v2.xlsx」、
+    # それも既存なら _v3 ... と、存在しない名前が見つかるまで番号を上げる。
+    base = f"【{kintone_id}】 {title}"
+    candidate = output_dir / f"{base}.xlsx"
+    if not candidate.exists():
+        return candidate
+    version = 2
+    while True:
+        candidate = output_dir / f"{base}_v{version}.xlsx"
+        if not candidate.exists():
+            return candidate
+        version += 1
 
 
-def load_workbook(output_path):
-    if output_path.exists():
-        return openpyxl.load_workbook(output_path)
+def load_workbook():
+    # 常にテンプレートから生成する（既存ファイルへの就地上書きはしない）。
+    # 出力先は resolve_output_path が常に未存在のパスを返すため、前回データの残留は起きない。
     if TEMPLATE_PATH.exists():
         return openpyxl.load_workbook(TEMPLATE_PATH)
     wb = openpyxl.Workbook()
@@ -296,7 +302,7 @@ def main():
         sys.exit(1)
 
     output_path = resolve_output_path(args.output, args.kintone_id, args.title)
-    wb = load_workbook(output_path)
+    wb = load_workbook()
 
     sheet_viewpoints = find_sheet(wb, ["観点"])
     sheet_cases = find_sheet(wb, ["ケース"])
