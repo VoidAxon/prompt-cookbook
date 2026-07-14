@@ -40,6 +40,12 @@ padding:12px;margin:12px 0;text-align:center}
 border-radius:4px;padding:0 6px;font-weight:600;color:#8a5a00}
 blockquote{margin:0;padding:8px 16px;border-left:4px solid var(--warn-bd);
 background:var(--warn-bg);border-radius:0 6px 6px 0}
+.docnav-box{margin:-8px -8px 16px;padding:0 0 10px;border-bottom:1px solid var(--line)}
+.docnav-h{font-weight:700;padding:4px 8px;font-size:12px;letter-spacing:.04em;color:var(--ink)}
+a.docnav{display:block;color:var(--sub);text-decoration:none;padding:4px 8px;border-radius:4px;font-size:12.5px}
+a.docnav:hover{background:var(--bg);color:var(--accent)}
+a.docnav-cur{background:var(--accent);color:#fff;font-weight:600}
+a.docnav-cur:hover{background:var(--accent);color:#fff}
 @media print{nav{display:none}main{padding:0}}
 """
 
@@ -60,6 +66,22 @@ def _ensure_blank_before_lists(text: str) -> str:
                 out.append("")
         out.append(line)
     return "\n".join(out)
+
+def _sibling_nav(src: Path) -> str:
+    """分割出力（00_index.md, 01_xxx.md …）のとき、同一フォルダの各章 html への
+    横断ナビを返す。数字始まりの md のみを「分割章」とみなす（template.md・example.md 等の
+    非分割 md を誤って兄弟扱いしない）。単一 md や非分割 md では空を返す。"""
+    if not re.match(r"\d", src.name):
+        return ""
+    sibs = sorted(p for p in src.parent.glob("*.md") if re.match(r"\d", p.name))
+    if len(sibs) <= 1:
+        return ""
+    links = []
+    for p in sibs:
+        cur = " docnav-cur" if p.name == src.name else ""
+        links.append(f'<a class="docnav{cur}" href="{p.stem}.html">{html.escape(p.stem)}</a>')
+    return ('<div class="docnav-box"><div class="docnav-h">ドキュメント</div>'
+            + "".join(links) + "</div>")
 
 def build(src: Path, dst: Path):
     text = src.read_text(encoding="utf-8")
@@ -82,21 +104,39 @@ def build(src: Path, dst: Path):
                             f'<div class="mermaid">{html.escape(code)}</div>')
     # 未確認の強調
     body = re.sub(r"(?<![\w>])未確認(?![\w<])", '<span class="unconfirmed">未確認</span>', body)
+    # md 相互リンクを html リンクへ改写（分割ドキュメント間のジャンプを可能に）
+    body = re.sub(r'(href=")([^"#]+)\.md(#[^"]*)?(")',
+                  lambda m: f'{m.group(1)}{m.group(2)}.html{m.group(3) or ""}{m.group(4)}', body)
     title = re.search(r"^# (.+)$", text, re.M)
     title = title.group(1) if title else src.stem
+    toc_html = re.sub(r'<li><a href="(#[^"]+)">([^<]+)</a>(<ul>)?',
+                      lambda m: f'<a class="l2" href="{m.group(1)}">{m.group(2)}</a>',
+                      md.toc).replace("<ul>","").replace("</ul>","").replace("</li>","").replace("<li>","").replace('class="toc"','')
+    sibnav = _sibling_nav(src)
     dst.write_text(f"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
 <title>{html.escape(title)}</title><style>{CSS}</style>
 <script type="module">
 import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
 mermaid.initialize({{startOnLoad:true,theme:"neutral"}});</script>
 </head><body><div class="layout">
-<nav>{re.sub(r'<li><a href="(#[^"]+)">([^<]+)</a>(<ul>)?',
-             lambda m: f'<a class="l2" href="{m.group(1)}">{m.group(2)}</a>' if m.group(3) is None else f'<a class="l2" href="{m.group(1)}">{m.group(2)}</a>',
-             md.toc).replace("<ul>","").replace("</ul>","").replace("</li>","").replace("<li>","").replace('class="toc"','')}</nav>
+<nav>{sibnav}{toc_html}</nav>
 <main>{body}</main></div></body></html>""", encoding="utf-8")
 
 if __name__ == "__main__":
-    src = Path(sys.argv[1])
-    dst = Path(sys.argv[2]) if len(sys.argv) > 2 else src.with_suffix(".html")
+    # usage: build_html.py <input.md> [output.html]
+    #        build_html.py <input.md> --outdir <dir>   （分割出力を html/ 等へまとめる）
+    args = sys.argv[1:]
+    outdir = None
+    if "--outdir" in args:
+        i = args.index("--outdir")
+        outdir = Path(args[i + 1]); del args[i:i + 2]
+    src = Path(args[0])
+    if outdir is not None:
+        outdir.mkdir(parents=True, exist_ok=True)
+        dst = outdir / (src.stem + ".html")
+    elif len(args) > 1:
+        dst = Path(args[1])
+    else:
+        dst = src.with_suffix(".html")
     build(src, dst)
     print(f"OK: {dst}")

@@ -1,0 +1,1373 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
+<title>詳細設計書：検査結果一覧照会画面</title><style>
+:root{--ink:#1f2430;--sub:#5a6372;--line:#dde2ea;--bg:#f6f7f9;--card:#fff;
+--accent:#2f6fed;--warn-bg:#fff6e5;--warn-bd:#e6a23c;--th:#eef1f6;}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Yu Gothic UI","Hiragino Sans","Noto Sans JP",Meiryo,sans-serif;
+color:var(--ink);background:var(--bg);line-height:1.75;font-size:15px}
+.layout{display:flex;max-width:1280px;margin:0 auto}
+nav{width:290px;flex:none;position:sticky;top:0;height:100vh;overflow-y:auto;
+padding:24px 16px;border-right:1px solid var(--line);background:var(--card);font-size:13px}
+nav a{display:block;color:var(--sub);text-decoration:none;padding:3px 8px;border-radius:4px}
+nav a:hover{background:var(--bg);color:var(--accent)}
+nav .l2{font-weight:600;color:var(--ink);margin-top:8px}
+nav .l3{padding-left:20px}
+main{flex:1;min-width:0;padding:36px 48px;background:var(--card)}
+h1{font-size:26px;border-bottom:3px solid var(--accent);padding-bottom:10px}
+h2{font-size:20px;margin-top:44px;padding:6px 12px;border-left:5px solid var(--accent);
+background:linear-gradient(90deg,#eef3fe,transparent)}
+h3{font-size:16px;margin-top:28px;color:var(--accent)}
+h4{font-size:15px;margin-top:22px;padding-left:8px;border-left:3px solid var(--sub)}
+table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13.5px;background:#fff}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+th{background:var(--th);font-weight:600;white-space:nowrap}
+tr:nth-child(even) td{background:#fafbfd}
+code{background:#f1f3f7;border-radius:4px;padding:1px 5px;
+font-family:Consolas,"Cascadia Code",monospace;font-size:.9em}
+pre{background:#282c34;color:#e6e6e6;padding:14px 18px;border-radius:8px;
+overflow-x:auto;font-size:13px;line-height:1.55}
+pre code{background:none;color:inherit;padding:0}
+.mermaid{background:#fff;border:1px solid var(--line);border-radius:8px;
+padding:12px;margin:12px 0;text-align:center}
+.unconfirmed{background:var(--warn-bg);border:1px solid var(--warn-bd);
+border-radius:4px;padding:0 6px;font-weight:600;color:#8a5a00}
+blockquote{margin:0;padding:8px 16px;border-left:4px solid var(--warn-bd);
+background:var(--warn-bg);border-radius:0 6px 6px 0}
+.docnav-box{margin:-8px -8px 16px;padding:0 0 10px;border-bottom:1px solid var(--line)}
+.docnav-h{font-weight:700;padding:4px 8px;font-size:12px;letter-spacing:.04em;color:var(--ink)}
+a.docnav{display:block;color:var(--sub);text-decoration:none;padding:4px 8px;border-radius:4px;font-size:12.5px}
+a.docnav:hover{background:var(--bg);color:var(--accent)}
+a.docnav-cur{background:var(--accent);color:#fff;font-weight:600}
+a.docnav-cur:hover{background:var(--accent);color:#fff}
+@media print{nav{display:none}main{padding:0}}
+</style>
+<script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,theme:"neutral"});</script>
+</head><body><div class="layout">
+<nav><div >
+
+<a class="l2" href="#詳細設計書-検査結果一覧照会画面">詳細設計書：検査結果一覧照会画面</a>
+<a class="l2" href="#更新履歴">更新履歴</a>
+<a class="l2" href="#1-概要">1. 概要</a>
+<a class="l2" href="#1-1-機能の目的">1.1 機能の目的</a>
+<a class="l2" href="#1-2-スコープ">1.2 スコープ</a>
+<a class="l2" href="#1-3-前提条件-制約">1.3 前提条件・制約</a>
+<a class="l2" href="#1-4-用語定義">1.4 用語定義</a>
+
+
+<a class="l2" href="#2-位置づけ-呼び出し関係">2. 位置づけ・呼び出し関係</a>
+<a class="l2" href="#2-1-呼び出し元">2.1 呼び出し元</a>
+<a class="l2" href="#2-2-遷移先-連動する画面">2.2 遷移先・連動する画面</a>
+
+
+<a class="l2" href="#3-画面設計">3. 画面設計</a>
+<a class="l2" href="#3-1-画面項目定義">3.1 画面項目定義</a>
+<a class="l2" href="#3-2-画面イベント一覧">3.2 画面イベント一覧</a>
+<a class="l2" href="#3-3-入力チェック-バリデーション-">3.3 入力チェック（バリデーション）</a>
+<a class="l2" href="#3-4-コンテキストメニュー-右クリックメニュー-">3.4 コンテキストメニュー（右クリックメニュー）</a>
+<a class="l2" href="#3-5-条件付き表示制御-施設-設定-患者状態による分岐-">3.5 条件付き表示制御（施設・設定・患者状態による分岐）</a>
+
+
+<a class="l2" href="#4-検索-一覧-グリッド-設計">4. 検索・一覧（グリッド）設計</a>
+<a class="l2" href="#4-1-結果一覧グリッド-dgvResults-">4.1 結果一覧グリッド（dgvResults）</a>
+
+
+<a class="l2" href="#5-処理設計">5. 処理設計</a>
+<a class="l2" href="#5-1-処理一覧">5.1 処理一覧</a>
+<a class="l2" href="#5-2-処理詳細">5.2 処理詳細</a>
+<a class="l2" href="#P-02-結果検索">P-02: 結果検索</a>
+<a class="l2" href="#P-03-詳細表示">P-03: 詳細表示</a>
+
+
+<a class="l2" href="#5-3-複雑ロジックの記述">5.3 複雑ロジックの記述</a>
+
+
+<a class="l2" href="#6-ユースケース設計-データ入出力-">6. ユースケース設計（データ入出力）</a>
+<a class="l2" href="#6-1-ユースケース一覧">6.1 ユースケース一覧</a>
+<a class="l2" href="#6-2-ユースケース定義">6.2 ユースケース定義</a>
+<a class="l2" href="#UC-03-患者の検査結果を検索する">UC-03: 患者の検査結果を検索する</a>
+<a class="l2" href="#UC-01-UC-02-単純照会のため要点のみ-">UC-01 / UC-02（単純照会のため要点のみ）</a>
+
+
+<a class="l2" href="#6-3-UC-CRUD-対応表">6.3 UC → CRUD 対応表</a>
+<a class="l2" href="#6-4-SQL定義-現行挙動の参考-">6.4 SQL定義（現行挙動の参考）</a>
+<a class="l2" href="#6-5-テーブル-カラム定義-本機能が参照する範囲のみ-">6.5 テーブル・カラム定義（本機能が参照する範囲のみ）</a>
+
+
+<a class="l2" href="#7-外部連携">7. 外部連携</a>
+<a class="l2" href="#8-設定値">8. 設定値</a>
+<a class="l2" href="#9-メッセージ-エラー処理">9. メッセージ・エラー処理</a>
+<a class="l2" href="#9-1-メッセージ一覧">9.1 メッセージ一覧</a>
+<a class="l2" href="#9-2-異常時の動作">9.2 異常時の動作</a>
+
+
+<a class="l2" href="#10-医療安全上の留意点">10. 医療安全上の留意点</a>
+<a class="l2" href="#11-未確認事項-申し送り">11. 未確認事項・申し送り</a>
+<a class="l2" href="#付録A-解析対象ファイル一覧-網羅の証明-">付録A. 解析対象ファイル一覧（網羅の証明）</a>
+<a class="l2" href="#付録B-トレーサビリティ-必要な場合のみ-最小限-">付録B. トレーサビリティ（必要な場合のみ・最小限）</a>
+
+
+
+</div>
+</nav>
+<main><h1 id="詳細設計書-検査結果一覧照会画面">詳細設計書：検査結果一覧照会画面</h1>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ドキュメントID</td>
+<td>DD-LAB-0021</td>
+</tr>
+<tr>
+<td>システム名</td>
+<td>&lt;対象システム名&gt;（架空サンプル）</td>
+</tr>
+<tr>
+<td>対象画面 / 機能名</td>
+<td>検査 / 検査結果一覧照会</td>
+</tr>
+<tr>
+<td>対象クラス（起点）</td>
+<td>FrmLabResultList</td>
+</tr>
+<tr>
+<td>作成者 / 作成日</td>
+<td>張 / 2026-07-12</td>
+</tr>
+<tr>
+<td>ステータス</td>
+<td>Draft</td>
+</tr>
+</tbody>
+</table>
+<h2 id="更新履歴">更新履歴</h2>
+<table>
+<thead>
+<tr>
+<th>版</th>
+<th>日付</th>
+<th>変更者</th>
+<th>変更内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.1</td>
+<td>2026-07-12</td>
+<td>張</td>
+<td>初版（実装からの書き起こし）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="1-概要">1. 概要</h2>
+<h3 id="1-1-機能の目的">1.1 機能の目的</h3>
+<p>選択中の患者について、過去の検査結果を期間・検査種別で絞り込んで一覧表示し、行を選択して結果詳細画面を開くための照会画面。参照専用であり、本画面から検査データの登録・修正は行わない。</p>
+<h3 id="1-2-スコープ">1.2 スコープ</h3>
+<ul>
+<li>対象：検索条件の入力、結果一覧の表示、詳細画面への遷移、異常値の強調表示</li>
+<li>対象外：検査オーダの発行（→ DD-ORD-0005）、結果詳細の表示内容（→ DD-LAB-0022）</li>
+</ul>
+<h3 id="1-3-前提条件-制約">1.3 前提条件・制約</h3>
+<ul>
+<li>カルテ画面で患者が選択済みであること（患者未選択では本画面を開けない）</li>
+<li>参照専用。本画面からのDB更新は一切行わない</li>
+<li>表示対象は確定済み結果のみ。未確定（速報）結果は設定（§8）により表示可否が切り替わる</li>
+</ul>
+<h3 id="1-4-用語定義">1.4 用語定義</h3>
+<table>
+<thead>
+<tr>
+<th>用語</th>
+<th>定義</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>基準値外</td>
+<td>検査項目ごとに定義された基準範囲（下限〜上限）を外れた結果値</td>
+</tr>
+<tr>
+<td>速報</td>
+<td>検査部門で最終確定前に送信される暫定結果</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-位置づけ-呼び出し関係">2. 位置づけ・呼び出し関係</h2>
+<h3 id="2-1-呼び出し元">2.1 呼び出し元</h3>
+<table>
+<thead>
+<tr>
+<th>呼び出し元</th>
+<th>契機（操作）</th>
+<th>引き渡される情報</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>カルテ画面</td>
+<td>メニュー「検査」→「結果一覧照会」</td>
+<td>患者ID、カルテ表示中の診療日</td>
+</tr>
+<tr>
+<td>検査オーダ画面</td>
+<td>「過去結果」Button の Click</td>
+<td>患者ID、選択中の検査種別コード</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2-2-遷移先-連動する画面">2.2 遷移先・連動する画面</h3>
+<table>
+<thead>
+<tr>
+<th>遷移先 / 連動先</th>
+<th>契機</th>
+<th>受け渡す情報</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>検査結果詳細画面</td>
+<td>一覧行のダブルクリック / 「詳細」Button</td>
+<td>検査依頼番号、患者ID</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-画面設計">3. 画面設計</h2>
+<h3 id="3-1-画面項目定義">3.1 画面項目定義</h3>
+<table>
+<thead>
+<tr>
+<th>No</th>
+<th>項目名（表示）</th>
+<th>項目ID（コントロール名）</th>
+<th>種別</th>
+<th>初期状態</th>
+<th>必須</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>患者ID</td>
+<td>txtPatientId</td>
+<td>TextBox</td>
+<td>読取専用・呼出元の患者IDを表示</td>
+<td>-</td>
+<td>本画面では変更不可</td>
+</tr>
+<tr>
+<td>2</td>
+<td>患者氏名</td>
+<td>lblPatientName</td>
+<td>Label</td>
+<td>患者IDに対応する氏名を表示</td>
+<td>-</td>
+<td></td>
+</tr>
+<tr>
+<td>3</td>
+<td>検査日From</td>
+<td>dtpDateFrom</td>
+<td>DateTimePicker</td>
+<td>診療日の3か月前</td>
+<td>○</td>
+<td></td>
+</tr>
+<tr>
+<td>4</td>
+<td>検査日To</td>
+<td>dtpDateTo</td>
+<td>DateTimePicker</td>
+<td>診療日</td>
+<td>○</td>
+<td></td>
+</tr>
+<tr>
+<td>5</td>
+<td>検査種別</td>
+<td>cmbTestCategory</td>
+<td>ComboBox</td>
+<td>「全て」</td>
+<td>-</td>
+<td>検査種別マスタから取得。呼出元が種別を渡した場合はその種別を初期選択</td>
+</tr>
+<tr>
+<td>6</td>
+<td>基準値外のみ</td>
+<td>chkAbnormalOnly</td>
+<td>CheckBox</td>
+<td>OFF</td>
+<td>-</td>
+<td></td>
+</tr>
+<tr>
+<td>7</td>
+<td>検索</td>
+<td>btnSearch</td>
+<td>Button</td>
+<td>有効</td>
+<td>-</td>
+<td></td>
+</tr>
+<tr>
+<td>8</td>
+<td>結果一覧</td>
+<td>dgvResults</td>
+<td>DataGridView</td>
+<td>空</td>
+<td>-</td>
+<td>詳細は §4.1</td>
+</tr>
+<tr>
+<td>9</td>
+<td>詳細</td>
+<td>btnDetail</td>
+<td>Button</td>
+<td>無効（行選択で有効化）</td>
+<td>-</td>
+<td></td>
+</tr>
+<tr>
+<td>10</td>
+<td>閉じる</td>
+<td>btnClose</td>
+<td>Button</td>
+<td>有効</td>
+<td>-</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="3-2-画面イベント一覧">3.2 画面イベント一覧</h3>
+<table>
+<thead>
+<tr>
+<th>No</th>
+<th>項目ID</th>
+<th>イベント</th>
+<th>動作概要</th>
+<th>詳細</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>（画面）</td>
+<td>Load</td>
+<td>患者情報の表示、検査種別マスタの取得、検索条件の初期化</td>
+<td>→ §5.2 P-01</td>
+</tr>
+<tr>
+<td>2</td>
+<td>btnSearch</td>
+<td>Click</td>
+<td>入力チェック後、条件に従い結果一覧を検索・表示</td>
+<td>→ §5.2 P-02</td>
+</tr>
+<tr>
+<td>3</td>
+<td>dgvResults</td>
+<td>SelectionChanged</td>
+<td>行選択の有無で「詳細」Button の有効/無効を切替</td>
+<td>概要のみで足りる</td>
+</tr>
+<tr>
+<td>4</td>
+<td>dgvResults</td>
+<td>CellDoubleClick</td>
+<td>選択行の結果詳細画面を開く</td>
+<td>→ §5.2 P-03</td>
+</tr>
+<tr>
+<td>5</td>
+<td>btnDetail</td>
+<td>Click</td>
+<td>同上（P-03 と同一処理）</td>
+<td>→ §5.2 P-03</td>
+</tr>
+<tr>
+<td>6</td>
+<td>btnClose</td>
+<td>Click</td>
+<td>画面を閉じる</td>
+<td>概要のみで足りる</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3-3-入力チェック-バリデーション-">3.3 入力チェック（バリデーション）</h3>
+<table>
+<thead>
+<tr>
+<th>対象項目</th>
+<th>チェック内容</th>
+<th>NG時の動作（メッセージID）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dtpDateFrom / dtpDateTo</td>
+<td>From ≦ To であること</td>
+<td>M-01 を表示し検索を中止。フォーカスを dtpDateFrom へ</td>
+</tr>
+<tr>
+<td>dtpDateFrom / dtpDateTo</td>
+<td>期間が2年以内であること</td>
+<td>M-02 を表示し検索を中止</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3-4-コンテキストメニュー-右クリックメニュー-">3.4 コンテキストメニュー（右クリックメニュー）</h3>
+<p>結果一覧グリッド（dgvResults）に contextResult（ContextMenuStrip）を割り当てる。他のコントロールには割当なし（確認済み: Designer に他の ContextMenuStrip 割当なし）。いずれの項目も画面内で完結し、DB更新・画面遷移は伴わない。</p>
+<table>
+<thead>
+<tr>
+<th>割当先（コントロール）</th>
+<th>メニュー項目</th>
+<th>表示・活性条件</th>
+<th>クリック時の動作（概要）</th>
+<th>詳細</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dgvResults</td>
+<td>結果値をコピー</td>
+<td>セル上で右クリックしたときのみ表示（Opening で HitTest がセル以外なら e.Cancel）。行選択中は常に活性</td>
+<td>選択行の結果値・単位をクリップボードへコピーする</td>
+<td>概要のみで足りる</td>
+</tr>
+<tr>
+<td>dgvResults</td>
+<td>基準値をコピー</td>
+<td>基準値列（colReferenceRange）のセル上で右クリックしたときのみ表示</td>
+<td>選択行の基準値（下限〜上限）をクリップボードへコピーする</td>
+<td>概要のみで足りる</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3-5-条件付き表示制御-施設-設定-患者状態による分岐-">3.5 条件付き表示制御（施設・設定・患者状態による分岐）</h3>
+<table>
+<thead>
+<tr>
+<th>対象（項目/タブ/コントロール）</th>
+<th>切替内容（表示・活性・スタイル・文言）</th>
+<th>分岐条件（キー/施設/権限/患者状態）</th>
+<th>参照</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>確定区分列（colStatus）・速報行のグレー表示</td>
+<td>設定 OFF のとき速報を扱わないため確定区分列を非表示にする。ON のとき速報行を文字色グレーで表示し確定結果と区別する</td>
+<td>設定〈LabResult.ShowPreliminary〉（false=非表示 / true=表示）</td>
+<td>§8、§4.1(2)、§5.2 P-02</td>
+</tr>
+<tr>
+<td>画面全体の起動可否</td>
+<td>閲覧制限（VIP）患者では、閲覧権限を持つ利用者以外は本画面を開けない（呼出元でブロック）</td>
+<td>患者状態（閲覧制限）＋ 利用者の閲覧権限</td>
+<td>§8、§10</td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-検索-一覧-グリッド-設計">4. 検索・一覧（グリッド）設計</h2>
+<h3 id="4-1-結果一覧グリッド-dgvResults-">4.1 結果一覧グリッド（dgvResults）</h3>
+<p><strong>(1) 検索パラメータ（入力条件）</strong></p>
+<table>
+<thead>
+<tr>
+<th>No</th>
+<th>条件項目</th>
+<th>対応する画面項目ID</th>
+<th>型</th>
+<th>必須</th>
+<th>検索方式</th>
+<th>備考</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>患者ID</td>
+<td>txtPatientId</td>
+<td>文字列</td>
+<td>○</td>
+<td>完全一致</td>
+<td>画面で変更不可</td>
+</tr>
+<tr>
+<td>2</td>
+<td>検査日From/To</td>
+<td>dtpDateFrom / dtpDateTo</td>
+<td>日付</td>
+<td>○</td>
+<td>範囲（両端含む）</td>
+<td></td>
+</tr>
+<tr>
+<td>3</td>
+<td>検査種別コード</td>
+<td>cmbTestCategory</td>
+<td>文字列</td>
+<td>-</td>
+<td>完全一致</td>
+<td>「全て」選択時は条件に含めない</td>
+</tr>
+<tr>
+<td>4</td>
+<td>基準値外のみ</td>
+<td>chkAbnormalOnly</td>
+<td>真偽</td>
+<td>-</td>
+<td>-</td>
+<td>ON時、基準値外フラグ=1 の行のみ</td>
+</tr>
+<tr>
+<td>5</td>
+<td>確定区分</td>
+<td>（画面項目なし）</td>
+<td>固定</td>
+<td>-</td>
+<td>-</td>
+<td>確定のみ。設定（§8 速報表示）ON時は速報も含む</td>
+</tr>
+</tbody>
+</table>
+<p><strong>(2) 表示列定義</strong></p>
+<table>
+<thead>
+<tr>
+<th>No</th>
+<th>列名（ヘッダ）</th>
+<th>列ID</th>
+<th>型</th>
+<th>幅</th>
+<th>表示順</th>
+<th>書式</th>
+<th>バインド元（返却項目）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>検査日</td>
+<td>colTestDate</td>
+<td>日付</td>
+<td>100</td>
+<td>1</td>
+<td>yyyy/MM/dd</td>
+<td>検査実施日</td>
+</tr>
+<tr>
+<td>2</td>
+<td>種別</td>
+<td>colCategory</td>
+<td>文字列</td>
+<td>90</td>
+<td>2</td>
+<td></td>
+<td>検査種別名</td>
+</tr>
+<tr>
+<td>3</td>
+<td>項目名</td>
+<td>colItemName</td>
+<td>文字列</td>
+<td>160</td>
+<td>3</td>
+<td></td>
+<td>検査項目名</td>
+</tr>
+<tr>
+<td>4</td>
+<td>結果値</td>
+<td>colResultValue</td>
+<td>文字列</td>
+<td>90</td>
+<td>4</td>
+<td>右寄せ</td>
+<td>結果値</td>
+</tr>
+<tr>
+<td>5</td>
+<td>単位</td>
+<td>colUnit</td>
+<td>文字列</td>
+<td>60</td>
+<td>5</td>
+<td></td>
+<td>単位</td>
+</tr>
+<tr>
+<td>6</td>
+<td>基準値</td>
+<td>colReferenceRange</td>
+<td>文字列</td>
+<td>110</td>
+<td>6</td>
+<td>下限〜上限</td>
+<td>基準値下限・上限</td>
+</tr>
+<tr>
+<td>7</td>
+<td>判定</td>
+<td>colJudge</td>
+<td>文字列</td>
+<td>50</td>
+<td>7</td>
+<td>中央寄せ</td>
+<td>H / L / 空欄（§5.3 条件→結果表）</td>
+</tr>
+<tr>
+<td>8</td>
+<td>確定</td>
+<td>colStatus</td>
+<td>文字列</td>
+<td>60</td>
+<td>8</td>
+<td></td>
+<td>確定区分（確定/速報）</td>
+</tr>
+</tbody>
+</table>
+<p>行の強調：判定が H または L の行は行背景を強調色にする。速報行は文字色をグレーにする。</p>
+<p><strong>(3) 返却項目（取得カラム）</strong></p>
+<table>
+<thead>
+<tr>
+<th>No</th>
+<th>返却項目</th>
+<th>取得元テーブル.カラム</th>
+<th>型</th>
+<th>備考</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>検査依頼番号</td>
+<td>t_lab_result.request_no</td>
+<td>文字列</td>
+<td>非表示。詳細画面への引き渡しに使用</td>
+</tr>
+<tr>
+<td>2</td>
+<td>検査実施日</td>
+<td>t_lab_result.test_date</td>
+<td>日付</td>
+<td></td>
+</tr>
+<tr>
+<td>3</td>
+<td>検査種別名</td>
+<td>m_test_category.category_name</td>
+<td>文字列</td>
+<td>結合取得</td>
+</tr>
+<tr>
+<td>4</td>
+<td>検査項目名</td>
+<td>m_test_item.item_name</td>
+<td>文字列</td>
+<td>結合取得</td>
+</tr>
+<tr>
+<td>5</td>
+<td>結果値</td>
+<td>t_lab_result.result_value</td>
+<td>文字列</td>
+<td></td>
+</tr>
+<tr>
+<td>6</td>
+<td>単位</td>
+<td>m_test_item.unit</td>
+<td>文字列</td>
+<td></td>
+</tr>
+<tr>
+<td>7</td>
+<td>基準値下限 / 上限</td>
+<td>m_test_item.ref_low / ref_high</td>
+<td>数値</td>
+<td></td>
+</tr>
+<tr>
+<td>8</td>
+<td>基準値外フラグ</td>
+<td>t_lab_result.abnormal_flag</td>
+<td>数値</td>
+<td>判定列の元</td>
+</tr>
+<tr>
+<td>9</td>
+<td>確定区分</td>
+<td>t_lab_result.confirm_status</td>
+<td>文字列</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>(4) 検索仕様の共通ルール</strong></p>
+<ul>
+<li>0件時：グリッドを空にし M-03 を情報表示（エラーではない）</li>
+<li>件数上限：2,000件。超過時は先頭2,000件を表示し M-04 を警告表示</li>
+<li>初期ソート：検査日 降順 → 表示順（検査項目マスタの並び順）昇順</li>
+<li>行ダブルクリック：P-03（詳細画面を開く）</li>
+</ul>
+<h2 id="5-処理設計">5. 処理設計</h2>
+<h3 id="5-1-処理一覧">5.1 処理一覧</h3>
+<table>
+<thead>
+<tr>
+<th>No</th>
+<th>処理名</th>
+<th>契機（画面操作/ライフサイクル）</th>
+<th>概要</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P-01</td>
+<td>初期表示</td>
+<td>画面 Load</td>
+<td>患者情報表示・種別マスタ取得・条件初期化</td>
+</tr>
+<tr>
+<td>P-02</td>
+<td>結果検索</td>
+<td>btnSearch Click</td>
+<td>入力チェック → 検索 → 一覧表示</td>
+</tr>
+<tr>
+<td>P-03</td>
+<td>詳細表示</td>
+<td>行ダブルクリック / btnDetail Click</td>
+<td>選択行の詳細画面を開く</td>
+</tr>
+</tbody>
+</table>
+<h3 id="5-2-処理詳細">5.2 処理詳細</h3>
+<h4 id="P-02-結果検索">P-02: 結果検索</h4>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>契機</td>
+<td>btnSearch の Click</td>
+</tr>
+<tr>
+<td>入力</td>
+<td>§4.1(1) の検索パラメータ</td>
+</tr>
+<tr>
+<td>出力 / 画面反映</td>
+<td>結果一覧の再表示、件数の表示</td>
+</tr>
+<tr>
+<td>前提条件</td>
+<td>入力チェック（§3.3）を通過していること</td>
+</tr>
+<tr>
+<td>事後条件</td>
+<td>「詳細」Button は無効に戻る（行選択が解除されるため）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>処理の流れ</strong></p>
+<ol>
+<li>入力チェック（§3.3）を行う。NG の場合はメッセージを表示し中断する</li>
+<li>検索パラメータを組み立てる。検査種別が「全て」の場合、種別条件は付けない。設定〈LabResult.ShowPreliminary〉が ON のとき、確定区分の絞り込みを外し速報も対象に含める</li>
+<li>サーバへ検索を依頼し、結果を受け取る（SQL は §6.2 Q-01）</li>
+<li>各行の判定列を §5.3 の条件→結果表に従い設定する</li>
+<li>グリッドへバインドし、初期ソートを適用する</li>
+<li>0件・上限超過の場合は §4.1(4) のとおりメッセージを表示する</li>
+</ol>
+<h4 id="P-03-詳細表示">P-03: 詳細表示</h4>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>契機</td>
+<td>dgvResults の行ダブルクリック、または btnDetail の Click</td>
+</tr>
+<tr>
+<td>入力</td>
+<td>選択行の検査依頼番号（非表示の返却項目 No.1）</td>
+</tr>
+<tr>
+<td>出力 / 画面反映</td>
+<td>検査結果詳細画面をモーダルで表示</td>
+</tr>
+<tr>
+<td>前提条件</td>
+<td>行が1行選択されていること</td>
+</tr>
+<tr>
+<td>事後条件</td>
+<td>詳細画面を閉じた後、一覧の選択状態・スクロール位置は保持される</td>
+</tr>
+</tbody>
+</table>
+<p><strong>処理の流れ</strong></p>
+<ol>
+<li>選択行から検査依頼番号を取得する</li>
+<li>検査結果詳細画面に検査依頼番号・患者IDを渡して開く</li>
+</ol>
+<h3 id="5-3-複雑ロジックの記述">5.3 複雑ロジックの記述</h3>
+<p><strong>判定列（H / L / 空欄）の決定 — L2: 条件→結果表</strong></p>
+<table>
+<thead>
+<tr>
+<th>条件</th>
+<th>結果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>結果値が数値であり、基準値上限を超える</td>
+<td>「H」を表示（行を強調色）</td>
+</tr>
+<tr>
+<td>結果値が数値であり、基準値下限を下回る</td>
+<td>「L」を表示（行を強調色）</td>
+</tr>
+<tr>
+<td>結果値が数値であり、基準範囲内</td>
+<td>空欄</td>
+</tr>
+<tr>
+<td>結果値が数値でない（例:「陰性」等の文字結果）</td>
+<td>空欄（基準値判定を行わない）</td>
+</tr>
+<tr>
+<td>基準値の下限・上限がマスタ未設定</td>
+<td>空欄（判定不能。エラーにしない）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-ユースケース設計-データ入出力-">6. ユースケース設計（データ入出力）</h2>
+<h3 id="6-1-ユースケース一覧">6.1 ユースケース一覧</h3>
+<table>
+<thead>
+<tr>
+<th>UC-ID</th>
+<th>ユースケース名（業務動詞）</th>
+<th>種別</th>
+<th>契機（処理No）</th>
+<th>概要</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UC-01</td>
+<td>検査種別の一覧を取得する</td>
+<td>照会</td>
+<td>P-01</td>
+<td>種別プルダウンの選択肢（有効な種別のみ）</td>
+</tr>
+<tr>
+<td>UC-02</td>
+<td>患者の基本情報を取得する</td>
+<td>照会</td>
+<td>P-01</td>
+<td>患者ID から氏名を取得し画面表示</td>
+</tr>
+<tr>
+<td>UC-03</td>
+<td>患者の検査結果を検索する</td>
+<td>照会</td>
+<td>P-02</td>
+<td>期間・種別・基準値外・確定区分で絞り込み一覧を返す</td>
+</tr>
+</tbody>
+</table>
+<p>P-03（詳細表示）は本画面では DB 入出力を伴わない（詳細画面側の UC → DD-LAB-0022）。</p>
+<h3 id="6-2-ユースケース定義">6.2 ユースケース定義</h3>
+<h4 id="UC-03-患者の検査結果を検索する">UC-03: 患者の検査結果を検索する</h4>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>種別</td>
+<td>照会（Query）</td>
+</tr>
+<tr>
+<td>契機</td>
+<td>P-02（→ §5.2）</td>
+</tr>
+<tr>
+<td>事前条件</td>
+<td>患者が特定されていること。検索期間が正当（From≦To かつ 2年以内）であること</td>
+</tr>
+<tr>
+<td>事後条件</td>
+<td>なし（参照のみ。状態を変更しない）</td>
+</tr>
+<tr>
+<td>トランザクション境界</td>
+<td>なし（単一 SELECT）</td>
+</tr>
+<tr>
+<td>同時実行・排他</td>
+<td>考慮なし（現行どおり）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>入力（→ アプリケーション層の入力DTOに対応。§4.1(1) と1対1）</strong></p>
+<table>
+<thead>
+<tr>
+<th>No</th>
+<th>項目</th>
+<th>型</th>
+<th>必須</th>
+<th>制約・意味</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>患者ID</td>
+<td>文字列</td>
+<td>○</td>
+<td>完全一致</td>
+</tr>
+<tr>
+<td>2</td>
+<td>検査日From / To</td>
+<td>日付</td>
+<td>○</td>
+<td>範囲（両端含む）。From≦To、期間2年以内</td>
+</tr>
+<tr>
+<td>3</td>
+<td>検査種別コード</td>
+<td>文字列</td>
+<td>-</td>
+<td>未指定＝全種別</td>
+</tr>
+<tr>
+<td>4</td>
+<td>基準値外のみ</td>
+<td>真偽</td>
+<td>-</td>
+<td>true のとき基準値外の結果のみ</td>
+</tr>
+<tr>
+<td>5</td>
+<td>速報を含む</td>
+<td>真偽</td>
+<td>-</td>
+<td>設定値（§8）に由来。画面入力ではない</td>
+</tr>
+</tbody>
+</table>
+<p><strong>出力（→ アプリケーション層の出力DTOに対応。§4.1(3) と1対1＋メタ情報）</strong></p>
+<table>
+<thead>
+<tr>
+<th>No</th>
+<th>項目</th>
+<th>型</th>
+<th>意味</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>明細一覧</td>
+<td>明細の配列</td>
+<td>各明細＝§4.1(3) No.1〜9（検査依頼番号・検査実施日・種別名・項目名・結果値・単位・基準値下限/上限・基準値外フラグ・確定区分）</td>
+</tr>
+<tr>
+<td>2</td>
+<td>打切りフラグ</td>
+<td>真偽</td>
+<td>上限2,000件で打切ったとき true</td>
+</tr>
+</tbody>
+</table>
+<p><strong>業務ルール（不変条件）</strong></p>
+<ul>
+<li>明細は検査日 降順 → 検査項目の表示順 昇順で返す</li>
+<li>上限2,000件で打切る（打切ってもエラーにしない。フラグで通知）</li>
+<li>基準値外の判定値（H/L）の決定は §5.3 の条件→結果表による（判定の実施層は移行設計側の判断とし、判定規則のみを契約とする）</li>
+</ul>
+<p><strong>結果とエラーの対応</strong></p>
+<table>
+<thead>
+<tr>
+<th>結果</th>
+<th>分類</th>
+<th>対応メッセージ</th>
+<th>備考</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>成功（0件含む）</td>
+<td>正常</td>
+<td>0件時 M-03</td>
+<td>0件は業務エラーではない</td>
+</tr>
+<tr>
+<td>上限超過</td>
+<td>正常（打切りフラグ true）</td>
+<td>M-04</td>
+<td>表示は継続</td>
+</tr>
+<tr>
+<td>期間指定不正</td>
+<td>業務エラー（結果として返す）</td>
+<td>M-01 / M-02</td>
+<td>現行は画面側チェック（§3.3）。UC でも入力不変条件として保持</td>
+</tr>
+<tr>
+<td>サーバ通信失敗</td>
+<td>技術例外</td>
+<td>通信エラー表示（§9.2）</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h4 id="UC-01-UC-02-単純照会のため要点のみ-">UC-01 / UC-02（単純照会のため要点のみ）</h4>
+<table>
+<thead>
+<tr>
+<th>UC</th>
+<th>入力</th>
+<th>出力</th>
+<th>備考</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UC-01</td>
+<td>なし</td>
+<td>種別（コード・名称）の一覧</td>
+<td>有効フラグ=1 のみ。表示順は未確認（→ §11）</td>
+</tr>
+<tr>
+<td>UC-02</td>
+<td>患者ID</td>
+<td>患者氏名</td>
+<td>該当なしは技術例外ではなく「不在」を結果で返す</td>
+</tr>
+</tbody>
+</table>
+<h3 id="6-3-UC-CRUD-対応表">6.3 UC → CRUD 対応表</h3>
+<table>
+<thead>
+<tr>
+<th>UC-ID</th>
+<th>テーブル</th>
+<th>C/R/U/D</th>
+<th>主な条件</th>
+<th>主な対象カラム</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UC-01</td>
+<td>m_test_category</td>
+<td>R</td>
+<td>有効フラグ=1</td>
+<td>category_code, category_name</td>
+</tr>
+<tr>
+<td>UC-02</td>
+<td>m_patient</td>
+<td>R</td>
+<td>患者ID</td>
+<td>patient_name</td>
+</tr>
+<tr>
+<td>UC-03</td>
+<td>t_lab_result / m_test_item / m_test_category</td>
+<td>R</td>
+<td>患者ID・検査日範囲・種別・基準値外・確定区分</td>
+<td>UC-03 出力の明細項目</td>
+</tr>
+</tbody>
+</table>
+<p>本画面からの C/U/D は無い（参照専用。確認済み: 対象クラスから Execute される ServerControl は SELECT のみ）。</p>
+<h3 id="6-4-SQL定義-現行挙動の参考-">6.4 SQL定義（現行挙動の参考）</h3>
+<pre><code class="language-sql">-- Q-01: 検査結果一覧検索（対応 UC: UC-03）
+SELECT
+    r.request_no,
+    r.test_date,
+    c.category_name,
+    i.item_name,
+    r.result_value,
+    i.unit,
+    i.ref_low,
+    i.ref_high,
+    r.abnormal_flag,
+    r.confirm_status
+FROM t_lab_result r
+    INNER JOIN m_test_item     i ON i.item_code     = r.item_code
+    INNER JOIN m_test_category c ON c.category_code = i.category_code
+WHERE r.patient_id = @patientId
+  AND r.test_date BETWEEN @dateFrom AND @dateTo
+  /* 種別「全て」以外のとき */ AND i.category_code = @categoryCode
+  /* 基準値外のみ ON のとき */ AND r.abnormal_flag = 1
+  /* 速報表示 OFF のとき */    AND r.confirm_status = '1'  -- 1:確定
+ORDER BY r.test_date DESC, i.display_order ASC
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>対応 UC</td>
+<td>UC-03</td>
+</tr>
+<tr>
+<td>実行経路</td>
+<td>検索 Button → サーバコマンド（検査結果一覧取得）</td>
+</tr>
+<tr>
+<td>想定件数 / 性能上の注意</td>
+<td>患者・2年範囲で最大数千件。上限2,000件で打切り</td>
+</tr>
+</tbody>
+</table>
+<p>※ 本 SQL は現行実装の記録であり、移行先が結合構造・打切り方式を踏襲する契約ではない。契約は UC-03 の定義。</p>
+<h3 id="6-5-テーブル-カラム定義-本機能が参照する範囲のみ-">6.5 テーブル・カラム定義（本機能が参照する範囲のみ）</h3>
+<table>
+<thead>
+<tr>
+<th>テーブル</th>
+<th>カラム</th>
+<th>型</th>
+<th>本機能での用途</th>
+<th>実在確認</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>t_lab_result</td>
+<td>request_no, test_date, item_code, result_value, abnormal_flag, confirm_status, patient_id</td>
+<td>-</td>
+<td>検索・一覧表示</td>
+<td>○（エンティティ定義で確認）</td>
+</tr>
+<tr>
+<td>m_test_item</td>
+<td>item_code, item_name, unit, ref_low, ref_high, category_code, display_order</td>
+<td>-</td>
+<td>結合・基準値判定・並び順</td>
+<td>○（エンティティ定義で確認）</td>
+</tr>
+<tr>
+<td>m_test_category</td>
+<td>category_code, category_name</td>
+<td>-</td>
+<td>種別プルダウン・結合</td>
+<td>○（エンティティ定義で確認）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="7-外部連携">7. 外部連携</h2>
+<p>該当なし（確認済み: 対象クラスおよび呼び出す ServerControl に外部送信・ファイル出力・印刷の処理なし）。</p>
+<h2 id="8-設定値">8. 設定値</h2>
+<table>
+<thead>
+<tr>
+<th>設定キー / 判定</th>
+<th>区分</th>
+<th>既定値</th>
+<th>本機能での影響</th>
+<th>影響箇所（章参照）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LabResult.ShowPreliminary</td>
+<td>設定</td>
+<td>false</td>
+<td>true のとき速報結果も一覧に含め、速報行をグレー表示する。false のとき確定区分列を非表示</td>
+<td>§3.5、§4.1(1) No.5、§4.1(2)、§5.2 P-02 手順2、§6.2 UC-03 入力 No.5</td>
+</tr>
+<tr>
+<td>閲覧制限（VIP）＋利用者の閲覧権限</td>
+<td>権限</td>
+<td>-</td>
+<td>閲覧制限患者は、閲覧権限を持つ利用者以外は本画面を開けない</td>
+<td>§3.5、§10</td>
+</tr>
+</tbody>
+</table>
+<h2 id="9-メッセージ-エラー処理">9. メッセージ・エラー処理</h2>
+<h3 id="9-1-メッセージ一覧">9.1 メッセージ一覧</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>種別</th>
+<th>文言</th>
+<th>表示契機</th>
+<th>応答による分岐</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M-01</td>
+<td>警告</td>
+<td>検査日の期間指定が正しくありません。</td>
+<td>§3.3 From＞To</td>
+<td>OK のみ。検索中止</td>
+</tr>
+<tr>
+<td>M-02</td>
+<td>警告</td>
+<td>検索期間は2年以内で指定してください。</td>
+<td>§3.3 期間超過</td>
+<td>OK のみ。検索中止</td>
+</tr>
+<tr>
+<td>M-03</td>
+<td>情報</td>
+<td>該当する検査結果がありません。</td>
+<td>P-02 で0件</td>
+<td>OK のみ</td>
+</tr>
+<tr>
+<td>M-04</td>
+<td>警告</td>
+<td>該当件数が上限を超えたため、先頭2,000件のみ表示します。</td>
+<td>P-02 で上限超過</td>
+<td>OK のみ。表示は継続</td>
+</tr>
+</tbody>
+</table>
+<h3 id="9-2-異常時の動作">9.2 異常時の動作</h3>
+<table>
+<thead>
+<tr>
+<th>事象</th>
+<th>検知</th>
+<th>画面の動作</th>
+<th>データへの影響</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>サーバ通信失敗</td>
+<td>検索依頼の例外</td>
+<td>通信エラーメッセージを表示し、一覧は直前の表示内容を保持</td>
+<td>なし（参照のみ）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="10-医療安全上の留意点">10. 医療安全上の留意点</h2>
+<ul>
+<li><strong>患者識別</strong>: 本画面は呼出元から渡された患者IDに固定され、画面内で患者を切り替えられない。表示中も患者ID・氏名を常時表示し、別患者の結果と取り違えない構造とする。</li>
+<li><strong>速報結果の扱い</strong>: 速報（未確定）結果は確定値と異なる可能性があるため、既定では表示しない。設定で表示する場合も「速報」の明示とグレー表示で確定結果と視覚的に区別する（§4.1(2)）。</li>
+<li><strong>基準値判定の限界</strong>: 判定列は基準値マスタに依存する。マスタ未設定の項目は判定しない（空欄）仕様であり、「空欄＝正常」ではないことを運用上周知する必要がある。</li>
+<li><strong>表示の打切り</strong>: 件数上限で打切った場合は必ず警告（M-04）を出し、全件表示と誤認させない。</li>
+<li>〔推定〕速報を既定で非表示にしているのは、確定前の暫定値を確定値と取り違えさせないための設計と考えられる（既定値 false は §8 で確認済みだが、その意図を明示するコメントはコード上に無いため推定）。</li>
+</ul>
+<h2 id="11-未確認事項-申し送り">11. 未確認事項・申し送り</h2>
+<table>
+<thead>
+<tr>
+<th>No</th>
+<th>内容</th>
+<th>未確認の理由（どこまで追ったか）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>検査項目マスタの display_order が未設定（NULL）の場合の並び順</td>
+<td>SQL の ORDER BY までは確認。NULL 時の実挙動（DB照合順）は未検証</td>
+</tr>
+<tr>
+<td>2</td>
+<td>UC-01 種別一覧の表示順</td>
+<td>ServerControl の SELECT に ORDER BY なし。現行はDB返却順に依存</td>
+</tr>
+</tbody>
+</table>
+<h2 id="付録A-解析対象ファイル一覧-網羅の証明-">付録A. 解析対象ファイル一覧（網羅の証明）</h2>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FrmLabResultList.cs</td>
+<td>イベント本体</td>
+</tr>
+<tr>
+<td>FrmLabResultList.Designer.cs</td>
+<td>画面項目・イベント結線・グリッド列定義</td>
+</tr>
+<tr>
+<td>ServerControls/Lab/LabResultListSelect.cs</td>
+<td>検索 SQL（Q-01）</td>
+</tr>
+<tr>
+<td>db/tables/TLabResult/TLabResult（エンティティ定義）</td>
+<td>テーブル実在確認</td>
+</tr>
+<tr>
+<td>db/tables/MTestItem/MTestItem（エンティティ定義）</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>db/tables/MTestCategory/MTestCategory（エンティティ定義）</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>設定定義層 LabSettings（設定定義）</td>
+<td>設定キー確認</td>
+</tr>
+</tbody>
+</table>
+<h2 id="付録B-トレーサビリティ-必要な場合のみ-最小限-">付録B. トレーサビリティ（必要な場合のみ・最小限）</h2>
+<table>
+<thead>
+<tr>
+<th>設計書の記載箇所</th>
+<th>実装位置（file:line）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§5.3 判定列の決定</td>
+<td>FrmLabResultList.cs:412</td>
+</tr>
+</tbody>
+</table></main></div></body></html>
