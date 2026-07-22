@@ -25,8 +25,9 @@ h2{font-size:20px;margin-top:44px;padding:6px 12px;border-left:5px solid var(--a
 background:linear-gradient(90deg,#eef3fe,transparent)}
 h3{font-size:16px;margin-top:28px;color:var(--accent)}
 h4{font-size:15px;margin-top:22px;padding-left:8px;border-left:3px solid var(--sub)}
-table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13.5px;background:#fff}
-th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13.5px;background:#fff;line-height:1.5}
+th,td{border:1px solid var(--line);padding:4px 9px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+td code{overflow-wrap:anywhere}
 th{background:var(--th);font-weight:600;white-space:nowrap}
 tr:nth-child(even) td{background:#fafbfd}
 code{background:#f1f3f7;border-radius:4px;padding:1px 5px;
