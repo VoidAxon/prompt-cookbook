@@ -47,6 +47,7 @@ ln -s ~/.claude/skills/prompt-cookbook/git/pr-desc    .claude/skills/pr-desc
 | [generate-testdoc](tools/generate-testdoc/SKILL.md) | `/generate-testdoc pr <no>` | PRまたはコミットの差分からテスト仕様書（Excel）を生成 |
 | [find-prs](tools/find-prs/SKILL.md) | `/find-prs <keyword> [opts]` | 組織横断で PR タイトル検索し、oneline/tree/table で出力 |
 | [spec-impl-reconcile](tools/spec-impl-reconcile/SKILL.md) | `/spec-impl-reconcile <仕様書パス> <クラス名> [md/excel/both]` | 設計書と実装を突合し記載漏れ・相違・要確認を課題リスト（Excel）化 |
+| [detail-design-doc](tools/detail-design-doc/SKILL.md) | `/detail-design-doc <対象クラス/画面名>`<br>`/detail-design-doc overview <設計書パス...>` | 既存コードから新規の詳細設計書（全11章＋付録）を書き起こす／速読用の概要設計を派生 |
 
 ## 使い方
 
@@ -234,6 +235,96 @@ python tools/spec-impl-reconcile/scripts/pipe_to_xlsx.py <③を書き出した�
 
 ---
 
+## detail-design-doc
+
+既存コードを唯一の情報源として、**新規の詳細設計書**を決まった型（全11章＋付録）で書き起こすスキル。この画面/機能を知らない開発者・レビュー担当者・非開発者が、実装を見なくても仕様と処理内容を理解できるレベルを目指す。**領域・言語非依存**（GUI 業務アプリ／WinForms が主だが、バッチ・常駐・連携等の非GUI機能にも章の読み替えで適用）。
+
+`spec-impl-reconcile` とは役割が逆で対になる: 本スキルは**コード → 設計書を新規に起こす**、`spec-impl-reconcile` は**既存設計書と実装を突合して差異を洗い出す**。設計書に対照結果・バグ指摘は混ぜない。
+
+### 必要な環境
+
+| 依存 | 用途 |
+|------|------|
+| **Python 3.8 以上** | レビュー用 HTML ビューの生成（`scripts/build_html.py`） |
+| **markdown** | md → HTML 変換（未導入なら md のみで完了可） |
+
+```bash
+pip install markdown
+```
+
+### 中核原則
+
+**実装を唯一の事実とし「代表例・主経路・標称挙動」で止めない。** 二軸で覚える:
+
+| 軸 | 内容 |
+|----|------|
+| ① 全量＋補集合 | 分岐は補集合（else）まで、集合（列・パラメタ・イベント・経路・成員）は全量まで枚举する |
+| ② 可達・実効 | 「表示/使用/複製/送信する」と書いた各要素が実際に到達・消費されるかを実コードで裏取りする（死UI・デッドパラメタの検出） |
+
+記述は確度で3分する: **確定**（コードに直接の裏付けあり）／**推定**（〔推定〕を付け断定形にしない）／**未確認**（第11章へ隔離。本文に埋めない）。コードに存在しない画面項目・テーブル・カラム・設定・メッセージを創作しない。
+
+### 使い方
+
+```
+/detail-design-doc <対象クラス/画面名>              # 詳細設計書を新規生成
+/detail-design-doc overview <詳細設計書のパス...>   # 概要編（速読用）を派生
+```
+
+対象コードの場所は起動時に指定し、プロジェクト固有の探索起点・命名規約は対象プロジェクトの CLAUDE.md／規約に従う。
+
+### 章立て（template.md）
+
+| 章 | 内容 |
+|---|---|
+| 1 概要 / 2 位置づけ | 目的・スコープ・呼び出し元・遷移先（専属/共有の判別） |
+| 3 画面設計 | 画面項目・イベント・バリデーション・コンテキストメニュー・条件付き表示制御 |
+| 4 検索・一覧（グリッド）設計 | グリッドごとに **(1)検索パラメータ (2)表示列定義 (3)返却項目** の3表 |
+| 5 処理設計 | 処理一覧・処理詳細（複雑度 L1〜L4）・§5.4 横断的処理（業務観点11項目） |
+| 6 ユースケース設計 | UC一覧・UC定義（入出力/事前事後/Tx境界/エラー対応）・UC→CRUD表・SQL・テーブル |
+| 7 外部連携 / 8 設定値 / 9 メッセージ | 連携先・設定キーと既定値・文言と分岐 |
+| 10 医療安全上の留意点 | 患者識別・用量・外部送信・マージの勝敗規則など仕様上の留意点 |
+| 11 未確認事項・申し送り | **要人間確認の一元収集点**（未確認・理解不完全・未処理・低信頼） |
+| 付録A / B / C | 解析対象ファイル一覧（網羅の証明）／トレーサビリティ（最小限）／業務ロジック配置・剥離マップ（移行向け・任意） |
+
+DB 入出力は「表への CRUD」ではなく**業務としての依頼（ユースケース）**として書く。後工程で AI が第6章から DDD アプリケーション層のインターフェース（Query/Command）を生成することを想定しているため。曖昧語（「適宜」「〜など」「必要に応じて」）は仕様として使わず、決まっていなければ第11章へ。
+
+### 概要編（overview）
+
+生成済みの詳細設計書を**唯一の入力源**として、「機能と流れを数分で掴む」ための短い概要設計を派生させるモード（コードは見ない・下流専用）。詳細設計書が無ければ中止し、先に通常モードで作るよう案内する。
+
+`overview-template.md` の固定章立て（1 一言サマリ／2 全体像／3 主要な使い方・モード／4 主要な流れ／5 状態の遷移／6 データの流れと重要ノードでの説明／7 データ・ファイルの保存方式／保存先／8 用語・主要データ・キー設定／9 機能間の関係）を使う。主幹フロー（目安 ≲6 本）だけ mermaid 図にし、残りは一覧化。複数の詳細書を渡すと**総合概要**になる。`lang:zh` 等で本文言語を切替可。
+
+### 出力
+
+既定の出力先は `~/Documents/docs/`（Windows は `%USERPROFILE%\Documents\docs\`）。規模に応じて自適応分割する。
+
+| 形式 | 条件 |
+|------|------|
+| 単一 md（`<対象名>.md`） | 画面項目 ≲15・グリッド ≲1・イベント ≲6・DB操作 ≲5・複雑ロジックなし・専属画面なし |
+| 複数 md（`<対象名>/`） | 上記を超える場合、または専属画面を1つ以上取り込む場合。**章別分割**（`00_index.md` ほか）／**タブ・機能別分割**（推奨） |
+
+md が正本。完成後は `scripts/build_html.py` でレビュー用 HTML ビューを生成する（HTML は編集しない）。
+
+```bash
+# 単一 md
+python3 tools/detail-design-doc/scripts/build_html.py <出力先>/<対象名>.md
+
+# 分割出力（HTML は html/ サブフォルダへまとめる）
+for f in <出力先>/<対象名>/[0-9]*.md; do
+  python3 tools/detail-design-doc/scripts/build_html.py "$f" --outdir <出力先>/<対象名>/html
+done
+```
+
+### 軽量自己校验（既定で実施）
+
+生成後、`spec-impl-reconcile` の約 1/3 のコストで自己点検を行い `_selfcheck.md` を出力する。**(1) 複用**（Step 1 で `_evidence/` に保存した生の事実と md を突合。コード再読なし）＋ **(2) 定点深読**（高リスク3類＝子画面の取り込み・外部連携の実行条件（購読側まで）・write-path の SQL 列、＋低コスト4点＝分岐の補集合・表示/受取の可達性・イベント配線の機械枚举・データ駆動の動的実行）の2段構え。
+
+全量突合の代替ではない。医療安全クリティカルな画面や正式移植・評審に載せる画面は `spec-impl-reconcile` を明示的に回すこと。
+
+詳細は [tools/detail-design-doc/SKILL.md](tools/detail-design-doc/SKILL.md)、記入済みの実例は `example.md` / `example.html` を参照。
+
+---
+
 ## ディレクトリ構成
 
 ```
@@ -260,12 +351,20 @@ prompt-cookbook/
     │   │   └── generate_testdoc.py   # Excel 生成スクリプト（要 Python + openpyxl）
     │   └── templates/
     │       └── test_spec_template.xlsx
-    └── spec-impl-reconcile/
+    ├── spec-impl-reconcile/
+    │   ├── SKILL.md
+    │   ├── references/
+    │   │   ├── review-method.md      # 実在ゲート・3レンズ・機械枚举母集団突合・収束ゲート
+    │   │   ├── output-format.md      # ①〜④・指摘箇所許可値・format・機械チェック
+    │   │   └── subagent-prompt.md    # 分節サブエージェント雛形
+    │   └── scripts/
+    │       └── pipe_to_xlsx.py       # ③転記表→機械チェック→真 xlsx（要 Python + openpyxl）
+    └── detail-design-doc/
         ├── SKILL.md
-        ├── references/
-        │   ├── review-method.md      # 実在ゲート・3レンズ・機械枚举母集団突合・収束ゲート
-        │   ├── output-format.md      # ①〜④・指摘箇所許可値・format・機械チェック
-        │   └── subagent-prompt.md    # 分節サブエージェント雛形
+        ├── template.md               # 詳細設計書の骨組み（全11章＋付録A/B/C）
+        ├── overview-template.md      # 概要編（速読用）の骨組み
+        ├── example.md                # グリッドを含む記入済みの実例
+        ├── example.html              # 上記の HTML ビュー
         └── scripts/
-            └── pipe_to_xlsx.py       # ③転記表→機械チェック→真 xlsx（要 Python + openpyxl）
+            └── build_html.py         # md → 単一ファイル HTML（要 Python + markdown）
 ```
