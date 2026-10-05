@@ -48,6 +48,7 @@ ln -s ~/.claude/skills/prompt-cookbook/git/pr-desc    .claude/skills/pr-desc
 | [find-prs](tools/find-prs/SKILL.md) | `/find-prs <keyword> [opts]` | 組織横断で PR タイトル検索し、oneline/tree/table で出力 |
 | [spec-impl-reconcile](tools/spec-impl-reconcile/SKILL.md) | `/spec-impl-reconcile <仕様書パス> <クラス名> [md/excel/both]` | 設計書と実装を突合し記載漏れ・相違・要確認を課題リスト（Excel）化 |
 | [detail-design-doc](tools/detail-design-doc/SKILL.md) | `/detail-design-doc <対象クラス/画面名>`<br>`/detail-design-doc overview <設計書パス...>` | 既存コードから新規の詳細設計書（全11章＋付録）を書き起こす／速読用の概要設計を派生 |
+| [handoff](tools/handoff/SKILL.md) | `/handoff` | 新しいセッションで作業を再開できるよう、現状・決定事項・却下案・次の手順を1枚の引き継ぎ md（`.claude/handoffs/`）に保存 |
 
 ## 使い方
 
@@ -359,12 +360,14 @@ prompt-cookbook/
     │   │   └── subagent-prompt.md    # 分節サブエージェント雛形
     │   └── scripts/
     │       └── pipe_to_xlsx.py       # ③転記表→機械チェック→真 xlsx（要 Python + openpyxl）
-    └── detail-design-doc/
-        ├── SKILL.md
-        ├── template.md               # 詳細設計書の骨組み（全11章＋付録A/B/C）
-        ├── overview-template.md      # 概要編（速読用）の骨組み
-        ├── example.md                # グリッドを含む記入済みの実例
-        ├── example.html              # 上記の HTML ビュー
-        └── scripts/
-            └── build_html.py         # md → 単一ファイル HTML（要 Python + markdown）
+    ├── detail-design-doc/
+    │   ├── SKILL.md
+    │   ├── template.md               # 詳細設計書の骨組み（全11章＋付録A/B/C）
+    │   ├── overview-template.md      # 概要編（速読用）の骨組み
+    │   ├── example.md                # グリッドを含む記入済みの実例
+    │   ├── example.html              # 上記の HTML ビュー
+    │   └── scripts/
+    │       └── build_html.py         # md → 単一ファイル HTML（要 Python + markdown）
+    └── handoff/
+        └── SKILL.md                  # 引き継ぎファイルを .claude/handoffs/ に1枚書き出す
 ```
