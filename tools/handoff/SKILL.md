@@ -148,9 +148,11 @@ Fix any gap, then stop.
 
 ## Step 7 — Report
 
-Tell the user the created path in one or two lines, followed by a ready-to-paste opening message for the new session, in the user's language — for example:
+Tell the user the created file's **absolute path** in one or two lines, followed by a ready-to-paste opening message for the new session that also uses the absolute path, in the user's language. A relative path breaks as soon as the new session starts in another directory or the path is passed to someone else.
 
-> Read `.claude/handoffs/2026-10-05-1315_nx-ci-fix.md`, check that the repository still matches its Current State, then continue from Next Steps.
+Show the path in the OS's native form so it can be copied straight into another session, a file explorer, or an editor: on Windows `C:\...`, not Git Bash's `/c/...` (convert with `cygpath -w <path>` if needed). Put it in its own code span so it copies cleanly. For example:
+
+> Read `C:\work\my-repo\.claude\handoffs\2026-10-05-1315_nx-ci-fix.md`, check that the repository still matches its Current State, then continue from Next Steps.
 
 The handoff file itself is the whole mechanism; do not set up anything else for resuming.
 
