@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Write a concise, self-contained handoff checkpoint file so a fresh coding-agent session can continue the current task without the old conversation. Use whenever the user says "handoff", "checkpoint", "交接", "写个handoff", "保存进度", "context快满了", "引き継ぎ", or wants to stop now and resume later in a new session — even if they don't say "handoff" explicitly. Only writes one Markdown file; never resumes sessions, edits source code, or changes Git state.
+description: Write a concise, self-contained handoff checkpoint file so a fresh coding-agent session can continue the current task without the old conversation. Use when the user asks for a handoff or checkpoint, says the context is nearly full, or wants to stop now and continue in a new session — in any language. Only writes one Markdown file; never resumes sessions, edits source code, or changes Git state — not for committing work (use git for that).
 ---
 
 # Handoff
@@ -15,6 +15,8 @@ The only write operations allowed are:
 2. creating the single handoff file.
 
 Everything else is read-only. In particular, do not commit, push, checkout, reset, stash, edit `.gitignore`, touch product/source files, or create TODO databases, issue tickets, or memory files. The user may be mid-change, and any side effect here can destroy work they haven't saved. Do not start or resume another session afterwards.
+
+Shell commands in this skill are POSIX (bash / Git Bash). If only PowerShell is available, use the equivalents rather than skipping the step — e.g. `Get-Date -Format 'yyyy-MM-dd-HHmm'` for the timestamp, `Get-Date -Format 'yyyy-MM-dd HH:mm K'` for the Generated line, and `Get-ChildItem <dir> -Name -ErrorAction SilentlyContinue | Select-Object -Last 20` for listing. `git` commands work unchanged.
 
 ## Step 1 — Locate output
 
@@ -63,11 +65,15 @@ Keep only what the next session would otherwise have to rediscover:
 - user constraints and corrections relevant to the task;
 - remaining work and blockers.
 
+If earlier parts of the conversation have been compacted into a summary, trust only what the summary actually states. Exact errors, numbers, or command output that survive only as a vague mention go under Not Yet Verified (or are re-checked cheaply) — never reconstruct them from impression, because a plausible-looking but invented detail is worse than a gap.
+
 Drop greetings, repeated explanations, and side discussions. A discarded idea goes under Tried / Rejected only if knowing about it saves the next session time — not because it took many turns to discuss.
 
 ## Step 5 — Write the file
 
 Use the template below. Omit a section only if it is genuinely inapplicable. Aim for 1–3 screens.
+
+For tasks that are not about changing code (investigation, data lookup, document review, etc.), the Git header lines and Changes Made are usually empty. Replace them with what that kind of task actually needs to resume: the data sources consulted (files, URLs, systems), the queries or conditions used, and the intermediate findings so far. Keep Branch/HEAD only if a repository is genuinely involved.
 
 Write in the language the user has been using in this conversation. Keep code, paths, commands, and error messages verbatim.
 
@@ -125,8 +131,7 @@ Write in the language the user has been using in this conversation. Keep code, p
 - **Mark inference as inference** ("likely", "unconfirmed") instead of stating it as fact.
 - **Next steps must be executable.** "Continue debugging" is not a step; "Add a log in `foo.ts:42` and rerun `pnpm test foo`" is.
 - **Stay on task.** List only task-relevant changed files. Do not include unrelated uncommitted work merely because it appears in `git status` — the repo may hold the user's other in-progress changes. If such changes exist, add one line to Current State saying so and that they must be left alone, without listing them.
-- **No secrets.** Never copy passwords, tokens, cookies, keys, or sensitive env values — including ones that appeared in diffs or command output. Refer to them by variable name only.
-- **Continuity.** If a previous handoff exists, carry forward only facts that are still true. Do not paste the old handoff in; the new one must stand alone.
+- **No secrets.** Never copy passwords, tokens, cookies, keys, or sensitive env values — including ones that appeared in diffs or command output. Refer to them by variable name only.- **Continuity.** If a previous handoff exists, carry forward only facts that are still true. Do not paste the old handoff in; the new one must stand alone.
 
 ## Step 6 — Self-check
 
@@ -143,4 +148,10 @@ Fix any gap, then stop.
 
 ## Step 7 — Report
 
-Tell the user the created path in one or two lines. If the handoffs directory is not ignored by Git (`git check-ignore -q <dir>` fails), add one line noting it could get committed by `git add .` — mention it, don't fix it.
+Tell the user the created path in one or two lines, followed by a ready-to-paste opening message for the new session, in the user's language — for example:
+
+> Read `.claude/handoffs/2026-10-05-1315_nx-ci-fix.md`, check that the repository still matches its Current State, then continue from Next Steps.
+
+The handoff file itself is the whole mechanism; do not set up anything else for resuming.
+
+If the handoffs directory is not ignored by Git (`git check-ignore -q <dir>` fails), add one line noting it could get committed by `git add .` — mention it, don't fix it.
